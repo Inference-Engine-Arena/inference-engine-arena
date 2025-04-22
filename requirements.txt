@@ -1,0 +1,32 @@
+# Core dependencies
+pyyaml
+requests
+watchdog
+tomli
+
+# Dashboard and leaderboard
+gradio>=3.50.0
+pandas
+numpy
+plotly
+matplotlib
+
+# API
+fastapi
+uvicorn
+
+# Auth and DB
+pymongo
+# webbrowser
+python-dotenv
+
+# Benchmark dependencies
+numpy
+aiohttp
+tqdm
+transformers
+huggingface_hub
+datasets
+pandas
+Pillow
+vllm

@@ -1,0 +1,104 @@
+---
+title: "Start/List/Stop Engines"
+description: "How to start and configure inference engines"
+---
+
+This guide covers how to start different inference engines with various configurations using Inference Engine Arena.
+
+## Basic Usage
+
+The basic syntax for starting an engine is:
+
+```bash
+# Start an engine
+arena start <engine_type> <model_name_or_path> [engine_args]
+```
+
+Where:
+
+- `<engine_type>` is the type of engine (e.g., `vllm`, `sglang`)
+- `<model_name_or_path>` is either a Hugging Face model ID or ~~a local path(currently not supported)~~ to a model
+- `[engine_args]` are arguments passed directly to the underlying engine, which is compatible to anything after `vllm serve`
+
+## Environment Variables(optional)
+
+Before starting an engine, you can set environment variables to configure advanced behaviors. These are set using standard shell commands:
+
+```bash
+# Example setting environment variables before starting an engine
+export VLLM_USE_V1=1
+export HUGGING_FACE_HUB_TOKEN="YOUR_HUGGING_FACE_TOKEN"
+export CUDA_VISIBLE_DEVICES=1
+```
+
+## Starting vLLM
+
+<Accordion title="Basic Usage" defaultOpen>
+  ```bash
+  arena start vllm NousResearch/Meta-Llama-3.1-8B --enable-prefix-caching
+  ```
+</Accordion>
+
+<Accordion title="Advanced Options" defaultOpen>
+  ```bash
+  # Start vLLM with environment variables and engine arguments
+  export VLLM_USE_V1=1
+  export HUGGING_FACE_HUB_TOKEN="YOUR_HUGGING_FACE_TOKEN"
+  export CUDA_VISIBLE_DEVICES=1
+  arena start vllm NousResearch/Meta-Llama-3.1-8B --enable-prefix-caching --quantization fp8
+  ```
+</Accordion>
+
+## Starting SGLang
+
+<Accordion title="Basic Usage" defaultOpen>
+  ```bash
+  arena start sglang NousResearch/Meta-Llama-3.1-8B --chunked-prefill-size 2048
+  ```
+</Accordion>
+
+<Accordion title="Advanced Options" defaultOpen>
+  ```bash
+  # Start sglang with environment variables and engine arguments
+  export SGL_ENABLE_JIT_DEEPGEMM=1
+  export HUGGING_FACE_HUB_TOKEN="YOUR_HUGGING_FACE_TOKEN"
+  export CUDA_VISIBLE_DEVICES=1
+  arena start sglang NousResearch/Meta-Llama-3.1-8B --enable-torch-compile
+  ```
+</Accordion>
+
+## Managing Running Engines
+
+<Accordion title="Listing Engines" defaultOpen>
+  To see the status of all running engines:
+
+  ```bash
+  arena list
+  ```
+
+  This will show the engine type, container ID, model, status, and endpoint for each engine.
+</Accordion>
+
+<Accordion title="Viewing Logs" defaultOpen>
+  To view the logs of a running engine:
+
+  ```bash
+  # Show recent logs
+  arena logs vllm
+  
+  # Follow logs in real-time
+  arena logs vllm --follow
+  
+  # View a specific number of lines
+  arena logs vllm --tail 500
+  ```
+</Accordion>
+
+<Accordion title="Stopping Engines" defaultOpen>
+  To stop a running engine:
+
+  ```bash
+  # Stop by engine type
+  arena stop vllm
+  ```
+</Accordion>

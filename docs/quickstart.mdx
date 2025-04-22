@@ -1,0 +1,276 @@
+---
+title: "Quickstart"
+description: "Get started with Inference Engine Arena in minutes"
+---
+
+This guide will help you get up and running with Inference Engine Arena quickly. You'll learn how to install the framework, start an inference engine, and run a simple benchmark.
+
+## Installation
+
+It's recommended to use uv, a very fast Python environment manager, install it from [here](https://docs.astral.sh/uv/getting-started/installation/) or `curl -LsSf https://astral.sh/uv/install.sh | sh`
+
+```bash
+# Clone the repository
+git clone https://github.com/Inference-Engine-Arena/inference-engine-arena.git
+cd inference-engine-arena
+
+# Install dependencies
+uv venv myenv
+source myenv/bin/activate
+uv pip install -e .
+```
+
+If you encounter any issues, please refer to the [Troubleshooting](https://docs.iearena.org/troubleshoot) guide or submit an issue on [GitHub](https://github.com/Inference-Engine-Arena/inference-engine-arena/issues).
+
+After installing the framework, you can start the inference engines and run benchmarks with two main approaches:    
+
+1. **Manual mode**: Starting engines and running benchmarks separately, designed for benchmarking simple test cases and experimental runs.
+2. **Batch mode**: Benchmark process initiated by ~~a single command or~~ a single YAML file, suitable for complex and large-scale test case benchmarks, or sharing reproducible experiments with others.
+
+## Manual Mode
+
+In manual mode, you start engines first, then run benchmarks. We'll show how to benchmark `NousResearch/Meta-Llama-3.1-8B` using vLLM.
+
+<Accordion title="Starting an Engine" defaultOpen>
+
+Start a vLLM engine with `NousResearch/Meta-Llama-3.1-8B`. You can add any vLLM parameters that are compatible with `vllm serve` after `vllm`.
+
+**Optional**: You can also set environment variables as you need.
+```bash
+# export VLLM_USE_V1=1
+# export HUGGING_FACE_HUB_TOKEN="YOUR_HUGGING_FACE_TOKEN"
+# export CUDA_VISIBLE_DEVICES=1
+arena start vllm NousResearch/Meta-Llama-3.1-8B --dtype bfloat16 --enable-prefix-caching
+```
+You'll see logs as the engine starts up. Wait until you see:
+```bash
+[INFO] src.engines.engine_manager: Started engine vllm
+[INFO] src.cli.commands: Engine started successfully: vllm
+```
+The process will running behind the scene. And you can check the status of running engines:
+
+```bash
+arena list
+```
+You can see the engine currently running.
+```bash
+Inference Engines (1):
+
+Name            Container ID    Model                     Status     Endpoint                       GPU Info
+--------------------------------------------------------------------------------------------------------------
+vllm            34547e9b5aa8    NousResearch/Meta-Llama-3 running    http://localhost:8000          NVIDIA H100 80GB HBM3
+```
+
+
+</Accordion>
+
+<Accordion title="Running Benchmarks on the Engine" defaultOpen>
+
+Once your engine is running, you can run a simple benchmark:
+
+```bash
+# Run a conversational benchmark on vLLM
+arena run --engine vllm --benchmark conversational_short conversational_medium summarization
+```
+
+**Tips**: You may run multiple benchmarks on the same engine. Or multiple benchmarks on different engines at the same time. Refer to [Run Benchmarks](https://docs.iearena.org/benchmarks) for more details.
+
+Expected output will show metrics like throughput, ttft, etc. The results will be saved to `./results` by default. Refer to the [Dashboard](https://docs.iearena.org/dashboard) and [Leaderboard](https://docs.iearena.org/leaderboard) for more details.
+```bash
+Running benchmark: conversational_short on vllm
+······
+src.benchmarks.benchmark_runner: Benchmark completed successfully. Key metrics: input_throughput=975.0938019114691, output_throughput=899.8165604039037, ttft=19.5751617802307
+······
+Benchmark Run Summary:
+  Run ID: run-20250420-231844-0e03bab4
+  Start time: 2025-04-20T23:18:44.583338
+  End time: 2025-04-20T23:23:17.441123
+  Duration: 272.9 seconds
+  Engines: vllm
+  Benchmark types: conversational_short, conversational_medium, conversational_long, rewrite_essay, summarization, write_essay
+  Sub-runs: 6
+
+Results saved to: ./results/run-20250420-231844-0e03bab4
+```
+
+</Accordion>
+
+<Accordion title="Stopping an Engine" defaultOpen>
+
+If you don't need this engine anymore, or wish to adjust its parameters:
+
+```bash
+arena stop vllm
+```
+
+The output below confirms the engine has been stopped successfully:
+
+```bash
+2025-04-20 23:36:03,357 [INFO] src.cli.commands: Stopped engine: vllm
+```
+</Accordion>
+
+## Batch Mode
+
+For more complex scenarios, where you need to benchmark multiple engines with different configurations and different benchmark configurations,you can define your experiments in a YAML file and run them with a single command. 
+
+Here, we use `/example_yaml/Meta-Llama-3.1-8B-varied-max-num-seq.yaml` as an example, which benchmarks the same benchmark type with different `max-num-seqs` configurations.
+
+**Tips**: You may also refer to other examples in the `/example_yaml` directory. And [runyaml section](http://localhost:3000/benchmarks#approach-3%3A-yaml-configuration-mode) for more details.
+
+<Accordion title="Example YAML Configuration" defaultOpen>
+
+Take a look at the YAML file:
+
+```yaml
+runs:
+  - engine:
+      - type: vllm
+        model: NousResearch/Meta-Llama-3.1-8B
+        args: "--max-num-batched-tokens 163840 --max-num-seqs 1"
+        env: {}
+    benchmarks:
+      - type: conversational_short
+        dataset-name: random
+        random-input-len: 100
+        random-output-len: 100
+        random-prefix-len: 0
+        num-prompts: 50
+        request-rate: 10
+
+  - engine:
+      - type: vllm
+        model: NousResearch/Meta-Llama-3.1-8B
+        args: "--max-num-batched-tokens 163840 --max-num-seqs 2"
+        env: {}
+    benchmarks:
+      - type: conversational_short
+        dataset-name: random
+        random-input-len: 100
+        random-output-len: 100
+        random-prefix-len: 0
+        num-prompts: 50
+        request-rate: 10
+
+  - engine:
+      - type: vllm
+        model: NousResearch/Meta-Llama-3.1-8B
+        args: "--max-num-batched-tokens 163840 --max-num-seqs 4"
+        env: {}
+    benchmarks:
+      - type: conversational_short
+        dataset-name: random
+        random-input-len: 100
+        random-output-len: 100
+        random-prefix-len: 0
+        num-prompts: 50
+        request-rate: 10
+
+  - engine:
+      - type: vllm
+        model: NousResearch/Meta-Llama-3.1-8B
+        args: "--max-num-batched-tokens 163840 --max-num-seqs 8"
+        env: {}
+    benchmarks:
+      - type: conversational_short
+        dataset-name: random
+        random-input-len: 100
+        random-output-len: 100
+        random-prefix-len: 0
+        num-prompts: 50
+        request-rate: 10
+
+  - engine:
+      - type: vllm
+        model: NousResearch/Meta-Llama-3.1-8B
+        args: "--max-num-batched-tokens 163840 --max-num-seqs 16"
+        env: {}
+    benchmarks:
+      - type: conversational_short
+        dataset-name: random
+        random-input-len: 100
+        random-output-len: 100
+        random-prefix-len: 0
+        num-prompts: 50
+        request-rate: 10
+
+  - engine:
+      - type: vllm
+        model: NousResearch/Meta-Llama-3.1-8B
+        args: "--max-num-batched-tokens 163840 --max-num-seqs 32"
+        env: {}
+    benchmarks:
+      - type: conversational_short
+        dataset-name: random
+        random-input-len: 100
+        random-output-len: 100
+        random-prefix-len: 0
+        num-prompts: 50
+        request-rate: 10
+
+  - engine:
+      - type: vllm
+        model: NousResearch/Meta-Llama-3.1-8B
+        args: "--max-num-batched-tokens 163840 --max-num-seqs 256"
+        env: {}
+    benchmarks:
+      - type: conversational_short
+        dataset-name: random
+        random-input-len: 100
+        random-output-len: 100
+        random-prefix-len: 0
+        num-prompts: 50
+        request-rate: 10
+```
+
+If you want to test more engines or benchmark types, you can continue adding engine with different configurations and benchmark configurations afterward.
+
+Run the benchmark configuration:
+
+```bash
+arena runyaml example_yaml/Meta-Llama-3.1-8B-varied-max-num-seq.yaml
+```
+
+This will automatically run the all experiments defined in the YAML file.
+
+</Accordion>
+
+
+
+## Viewing Results
+
+After running benchmarks, there are two ways to view and analyze the results.
+
+<CardGroup cols={2}>
+  <Card title="Dashboard" icon="chart-line">
+    Here you can visualize and compare results from a single benchmark run, and share them with our community.
+    ```bash
+    arena dashboard
+    ```
+    For a detailed introduction to the dashboard, see [`Dashboard`](/dashboard)
+  </Card>
+  <Card title="Leaderboard" icon="trophy">
+    Here you can compare your results across different benchmark runs, and can visit the community for further results.
+    ```bash
+    arena leaderboard
+    ```
+    For a detailed introduction to the leaderboard, see [`Leaderboard`](/leaderboard) 
+  </Card>
+</CardGroup>
+
+
+
+## Upload Results
+
+To share your benchmark results with the community, use these commands:
+
+```bash
+# Upload signle results to the global leaderboard
+arena upload sub-run-20250420-211509-vllm-Meta-Llama-3-1-8B-conversational-short-582ae937.json
+# Upload all results to the global leaderboard
+arena upload
+# Anonymous data upload
+arena upload --no-login
+```
+
+If you don't use the `--no-login` flag, you'll need to log in to authorize the upload. We recommend starting with a single JSON file upload to complete the login process, then using the command to upload all your data. Alternatively, you can first share your results in the dashboard using the "Share Subrun to Global Leaderboard" button. Don't worry about duplicate submissions - our system automatically deduplicates any repeated data.

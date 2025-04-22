@@ -1,0 +1,216 @@
+---
+title: 'Running Benchmarks'
+description: 'How to run and configure benchmarks on inference engines'
+---
+
+This guide explains how to run benchmarks on inference engines using Inference Engine Arena. There are three approaches to running benchmarks:
+
+1. **Manual Mode**: Run benchmarks on already-running engines
+2. ~~**Lifecycle Mode**: Start engines, run benchmarks, and stop engines in a single command~~
+3. **Batch Mode**(YAML Configuration): Define complex benchmark scenarios in a YAML file
+
+## Approach 1: Manual Mode
+
+In this approach, you run benchmarks on engines that are already running.
+
+### Prerequisites
+
+Before running benchmarks in manual mode, you need:
+
+1. One or more inference engines running (see [Starting Engines](/engines))
+
+### Basic Usage
+
+The basic syntax for running benchmarks in manual mode is:
+
+```bash
+arena run --engines <engine_list> --benchmark <benchmark_list>
+```
+
+Where:
+- `<engine_list>` is a space-separated list of engine types (e.g., `vllm sglang`)
+- `<benchmark_list>` is a space-separated list of benchmark types (e.g., `conversational_short summarization`)
+
+### Running a Simple Benchmark on a Single Engine
+
+Here's how to run a simple conversational benchmark on a running vLLM engine:
+
+```bash
+arena run --engines vllm --benchmark conversational_short
+```
+
+This will:
+1. Connect to the running vLLM engine
+2. Run the conversational benchmark with default settings
+3. Collect metrics and display the results
+
+### Running Multiple Benchmarks on a Single Engine
+
+You can run multiple benchmarks on a single engine:
+
+```bash
+arena run --engines vllm --benchmark conversational_short summarization
+```
+
+### Running Multiple Benchmarks on Multiple Engines
+
+To compare multiple benchmarks on multiple engines:
+
+```bash
+arena run --engines vllm sglang --benchmark conversational_short summarization conversational_medium
+```
+
+## Approach 2: Lifecycle Mode in one command line
+
+TO BE IMPLEMENTED
+
+~~In lifecycle mode, the tool manages the entire process: starting engines, running benchmarks, and stopping engines.~~
+
+### Basic Usage
+
+~~The basic syntax for lifecycle mode is:~~
+
+## Approach 3: Batch Mode (YAML Configuration Mode)
+
+For complex benchmark scenarios, you can define the entire configuration in a YAML file.
+
+### Running from YAML
+
+To run the benchmarks defined in a YAML file:
+
+```bash
+arena runyaml <path_to_yaml_file>
+```
+
+You may refer to the `/example_yaml` directory for more examples.
+
+### Example YAML Configuration
+
+Use your imagination to define your own benchmark scenarios to share with friends. Here's one example:
+
+```yaml
+runs:
+  - engine:
+      - type: vllm
+        model: NousResearch/Meta-Llama-3.1-8B
+        args: "--max-num-batched-tokens 163840 --max-num-seqs 1"
+        env: {}
+    benchmarks:
+      - type: conversational_short
+        dataset-name: random
+        random-input-len: 100
+        random-output-len: 100
+        random-prefix-len: 0
+        num-prompts: 50
+        request-rate: 10
+
+  - engine:
+      - type: vllm
+        model: NousResearch/Meta-Llama-3.1-8B
+        args: "--max-num-batched-tokens 163840 --max-num-seqs 2"
+        env: {}
+    benchmarks:
+      - type: conversational_short
+        dataset-name: random
+        random-input-len: 100
+        random-output-len: 100
+        random-prefix-len: 0
+        num-prompts: 50
+        request-rate: 10
+
+  - engine:
+      - type: vllm
+        model: NousResearch/Meta-Llama-3.1-8B
+        args: "--max-num-batched-tokens 163840 --max-num-seqs 4"
+        env: {}
+    benchmarks:
+      - type: conversational_short
+        dataset-name: random
+        random-input-len: 100
+        random-output-len: 100
+        random-prefix-len: 0
+        num-prompts: 50
+        request-rate: 10
+
+  - engine:
+      - type: vllm
+        model: NousResearch/Meta-Llama-3.1-8B
+        args: "--max-num-batched-tokens 163840 --max-num-seqs 8"
+        env: {}
+    benchmarks:
+      - type: conversational_short
+        dataset-name: random
+        random-input-len: 100
+        random-output-len: 100
+        random-prefix-len: 0
+        num-prompts: 50
+        request-rate: 10
+
+  - engine:
+      - type: vllm
+        model: NousResearch/Meta-Llama-3.1-8B
+        args: "--max-num-batched-tokens 163840 --max-num-seqs 16"
+        env: {}
+    benchmarks:
+      - type: conversational_short
+        dataset-name: random
+        random-input-len: 100
+        random-output-len: 100
+        random-prefix-len: 0
+        num-prompts: 50
+        request-rate: 10
+
+  - engine:
+      - type: vllm
+        model: NousResearch/Meta-Llama-3.1-8B
+        args: "--max-num-batched-tokens 163840 --max-num-seqs 32"
+        env: {}
+    benchmarks:
+      - type: conversational_short
+        dataset-name: random
+        random-input-len: 100
+        random-output-len: 100
+        random-prefix-len: 0
+        num-prompts: 50
+        request-rate: 10
+
+  - engine:
+      - type: vllm
+        model: NousResearch/Meta-Llama-3.1-8B
+        args: "--max-num-batched-tokens 163840 --max-num-seqs 256"
+        env: {}
+    benchmarks:
+      - type: conversational_short
+        dataset-name: random
+        random-input-len: 100
+        random-output-len: 100
+        random-prefix-len: 0
+        num-prompts: 50
+        request-rate: 10
+```
+Inference Engine Arena provides a comprehensive set of benchmarks to evaluate the performance of different inference engines. Each benchmark is designed to test specific aspects of engine performance.
+
+## Preset Benchmarks
+
+We find that the following benchmarks are useful. But feel free to define your own benchmarks.
+
+| Benchmark Name        | Workload Type | Input Length | Output Length | Prefix Length | QPS | Use Case                                   |
+| --------------------- | ------------- | ------------ | ------------- | ------------- | --- | ------------------------------------------ |
+| summarization         | LISO          | 12000        | 100           | 0             | 2   | Long document summarization, Meeting notes |
+| rewrite_essay         | LILO          | 12000        | 3000          | 0             | 2   | Essay rewriting and editing                |
+| write_essay           | SILO          | 100          | 3000          | 0             | 2   | Essay generation from short prompts        |
+| conversational_short  | SISO          | 100          | 100           | 0             | 10  | Short chat interactions                    |
+| conversational_medium | MISO          | 1000         | 100           | 2000          | 5   | Medium-length chat with context            |
+| conversational_long   | LISO          | 5000         | 100           | 7000          | 2   | Long conversations with extensive history  |
+
+- **SISO**: Short Input, Short Output
+- **MISO**: Medium Input, Short Output
+- **LISO**: Long Input, Short Output
+- **SILO**: Short Input, Long Output
+- **LILO**: Long Input, Long Output
+
+For detailed information about metrics, see [Metrics](/leaderboard#metrics).
+
+## Custom Benchmarks
+
+Adding custom benchmarks is easy : just create a new yaml file in the `src/benchmarks/benchmark_configs` folder

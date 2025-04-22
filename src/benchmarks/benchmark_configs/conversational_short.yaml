@@ -1,0 +1,16 @@
+# Conversational Short benchmark configuration
+# Tests model's performance with short inputs and outputs
+
+# description: "Benchmark for short conversational scenarios with short input and short output (SISO)"
+
+# Dataset configuration
+dataset-name: random
+random-input-len: 100
+random-output-len: 100
+random-prefix-len: 0
+num-prompts: 50
+
+# Request parameters
+request-rate: 10
+
+# Additional parameters

@@ -1,0 +1,60 @@
+---
+title: "Introduction"
+description: "TL;DR - Postman & Chatbot Arena for inference benchmarking."
+---
+
+## What is Inference Engine Arena?
+
+Inference Engine Arena is an open-source platform designed to help you benchmark and compare different LLM inference engines. With the rapid proliferation of inference engines like vLLM, SGLang, Ollama, and others(even including some frameworks like Dynamo and vllm production stack), it can be challenging to determine which one performs best for your specific use case.
+
+We handle the complexity of logging and comparing experiments across different engines running on various hardware with different models against diverse workloads. This frees individuals and enterprises from tedious logging and pipeline work, allowing them to focus on their business logic instead. 
+
+Inference Engine Arena helps you find the most **cost-effective** and performant inference engine for your workload. With Inference Engine Arena, everyone can start inference benchmarking and find the most suitable configuration for their use case **within minutes** instead of hours. Enterprises can find the best configuration **within hours** not weeks.
+
+## Key Components
+
+Inference Engine Arena consists of two major components:
+
+1. **Arena Logging System**: Think of it as the "**Postman for inference benchmarking**" — a powerful all-in-one tool that simplifies complex workflows. It helps users start, manage, configure, stop, and monitor inference engines, and execute experiments quickly. It enables:
+   - Using predefined benchmarks or configuring custom workflows
+   - Running batch experiments with different engine parameters and benchmark configurations
+   - Storing results in a well-organized manner
+   - Displaying results in a dashboard and local leaderboard for easy comparison and analysis
+   - Eliminating the need for scattered spreadsheets to track experiment results
+   - Generating visualizations, reports, and reproducible commands
+2. **Arena Leaderboard**: The "**ChatBot Arena**" for inference engines — a community-driven ranking system that helps everyone identify the best performers. It provides references of various engines running on different hardware with different models against different benchmarks:
+   - Each record represents a specific benchmark sub-run with particular hardware, model, and engine parameters
+   - Community-uploaded benchmark results
+   - Filtering capabilities to focus on relevant metrics
+   - Detailed configuration information for each record
+   - One-command reproduction of results using command line or YAML files
+
+## Key Features
+
+<CardGroup cols="2">
+  <Card title="Engine Management" icon="server">
+    Start, stop, and manage different inference engines with a simple CLI
+  </Card>
+  <Card title="Standardized Benchmarks" icon="chart-line">
+    Run pre-defined and custom benchmarks across engines
+  </Card>
+  <Card title="Comprehensive Metrics" icon="gauge">
+    Measure input throughput, output throughput, TPOT, TTFT, and more
+  </Card>
+  <Card title="Results Storage" icon="database">
+    Store and analyze benchmark results for later comparison
+  </Card>
+  <Card title="Interactive Logs" icon="terminal">
+    Stream container logs in real-time during startup and operation
+  </Card>
+  <Card title="Extensible Framework" icon="puzzle-piece">
+    Add support for new engines and custom benchmarks
+  </Card>
+</CardGroup>
+
+## Who Should Use This?
+
+- **ML Engineers** looking to deploy the most efficient inference engines
+- **Researchers** comparing the performance of different engine implementations
+- **DevOps Engineers** optimizing LLM infrastructure
+- **LLM Engine Developers** benchmarking their engines against others

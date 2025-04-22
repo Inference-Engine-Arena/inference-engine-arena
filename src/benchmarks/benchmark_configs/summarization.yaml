@@ -1,0 +1,16 @@
+# Summarization benchmark configuration
+# Tests model's ability to process long inputs and generate concise summaries
+
+# description: "Benchmark for summarization scenarios with large input and short output (LISO)"
+
+# Dataset configuration
+dataset-name: random
+random-input-len: 12000
+random-output-len: 100
+random-prefix-len: 0
+num-prompts: 20
+
+# Request parameters
+request-rate: 2
+
+# Additional parameters

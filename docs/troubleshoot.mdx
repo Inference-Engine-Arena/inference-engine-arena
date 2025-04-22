@@ -1,0 +1,57 @@
+---
+title: 'Troubleshoot'
+description: 'Troubleshooting tips for common problems.'
+---
+
+## Problem1: Permission Issues with Docker
+
+If you encounter permission issues with Docker like this:
+
+```bash
+(myenv) kobec@k8smaster:~/inference-engine-arena$ arena list 2025-04-18 15:46:01,523 [ERROR] src.utils.docker_utils: Docker command failed: permission denied while trying to connect to the Docker daemon socket at unix:///var/run/docker.sock: Get "http://%2Fvar%2Frun%2Fdocker.sock/v1.48/containers/json": dial unix /var/run/docker.sock: connect: permission denied 2025-04-18 15:46:01,523 [INFO] src.engines.engine_manager: Refreshed engines: 0 engines found 2025-04-18 15:46:01,523 [INFO] src.cli.commands: No engines found
+```
+
+you may need to add your user to the Docker group:
+
+```bash
+# Add your user to the docker group
+sudo usermod -aG docker $USER
+
+# Verify the user was added successfully
+groups $USER
+
+# Log out and log back in for the group changes to take effect
+# Or alternatively, you can refresh your group membership without logging out:
+newgrp docker
+```
+
+## Problem2:  arena: command not found
+
+If you got anything like `arena: command not found`, try Problem1 first, if it doesn't work, try replace `arena` with `python main.py`, or:
+```bash
+sudo python main.py
+```
+or even on some systems:
+```bash
+sudo -E python main.py
+```
+
+## Problem3: Too many login pages popped up when using `arena upload`
+
+If you encounter the issue of too many login pages opening when using `arena upload` to upload all result files, you can first use the following command to upload a single JSON file. 
+```bash
+arena upload <your-sub-run-json>.json
+```
+After logging in successfully, proceed to upload all the results all at once.
+
+## Problem4: Version of Docker image is outdated for inference engines
+
+To ensure fast engine startup, we do not pull the Docker image each time start is run. If the image has been updated, please use the following command to remove the old image before starting the engine again:
+```bash
+#List all images
+docker images
+# Remove the outdated image
+docker rmi <IMAGE_ID>
+# Or use repository:tag to remove the image
+docker rmi <repository>:<tag>
+```

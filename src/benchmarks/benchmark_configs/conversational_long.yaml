@@ -1,0 +1,16 @@
+# Conversational Long benchmark configuration
+# Tests model's performance with long inputs and short outputs
+
+# description: "Benchmark for long conversational scenarios with long input and short output (LISO)"
+
+# Dataset configuration
+dataset-name: random
+random-input-len: 5000
+random-output-len: 100
+random-prefix-len: 7000
+num-prompts: 50
+
+# Request parameters
+request-rate: 2
+
+# Additional parameters

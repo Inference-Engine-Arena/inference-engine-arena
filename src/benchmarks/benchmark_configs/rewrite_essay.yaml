@@ -1,0 +1,16 @@
+# Rewrite Essay benchmark configuration
+# Tests model's ability to process long inputs and generate long outputs
+
+# description: "Benchmark for essay rewriting scenarios with large input and large output (LILO)"
+
+# Dataset configuration
+dataset-name: random
+random-input-len: 12000
+random-output-len: 3000
+random-prefix-len: 0
+num-prompts: 20
+
+# Request parameters
+request-rate: 2
+
+# Additional parameters
