@@ -166,6 +166,7 @@ def get_global_gpu_info() -> Dict[str, Any]:
                         })
             return {
                 "success": True,
+                "num_gpus": len(gpus),
                 "gpus": gpus
             }
         else:
@@ -261,6 +262,7 @@ def get_container_gpu_info(container_id: str, engine_args: Optional[Dict[str, An
         "success": True,
         "container_id": container_id,
         "container_stats": container_stats,
+        "num_gpus": len(container_gpus),
         "gpus": container_gpus
     }
 
