@@ -159,8 +159,8 @@ class ArenaCommand:
                 
                 # Handle args that start with - or --
                 if arg.startswith("-"):
-                    # Strip leading dashes and convert to snake_case for internal use
-                    key = arg.lstrip("-").replace("-", "_")
+                    # Strip leading dashes 
+                    key = arg.lstrip("-")
                     
                     # Check if the next argument is a value or another flag
                     if i + 1 < len(args.args) and not args.args[i + 1].startswith("-"):
