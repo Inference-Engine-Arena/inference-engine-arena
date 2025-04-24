@@ -214,8 +214,8 @@ def format_timestamp(timestamp):
     except:
         return timestamp
 
-def load_runs(source: str = "local") -> List[Dict]:
-    """Load all runs from the specified source"""
+def load_runs(source: str = "local", model_filter: Optional[str] = None, engine_filter: Optional[str] = None, benchmark_filter: Optional[str] = None, gpu_filter: Optional[str] = None, show_custom_benchmarks: bool = False) -> List[Dict]:
+    """Load all runs from the specified source"""    
     if source == "local":
         # Directly load data from files without caching
         runs = []
@@ -274,8 +274,44 @@ def load_runs(source: str = "local") -> List[Dict]:
             return []
         
         try:
-            # Query MongoDB for all JSON data - get everything directly
-            results = list(collection.find({}))
+            # Build MongoDB query filter based on the provided schema
+            query_filter = {}
+            
+            # Apply model filter - model is in data.model field
+            if model_filter and model_filter != "All Models":
+                query_filter["data.model"] = model_filter
+            
+            # Apply engine filter - engine name is in data.engine.name field
+            if engine_filter and engine_filter != "All Engines":
+                query_filter["data.engine.name"] = engine_filter
+            
+            # Apply benchmark filter - benchmark type is in data.benchmark.type field
+            if benchmark_filter and benchmark_filter != "All Benchmarks":
+                query_filter["data.benchmark.type"] = benchmark_filter
+            
+            # Parse and apply GPU filter if provided
+            if gpu_filter and gpu_filter != "All GPUs":
+                # Parse GPU filter which is formatted as "GPU_NAME (NUM_GPUs)x"
+                # Example: "NVIDIA H100 80GB HBM3 (4x)"
+                gpu_parts = gpu_filter.rsplit(" (", 1)
+                if len(gpu_parts) == 2:
+                    gpu_name = gpu_parts[0]
+                    num_gpus_str = gpu_parts[1].rstrip("x)")
+                    try:
+                        num_gpus = int(num_gpus_str)
+                        # Apply both GPU name and count filter
+                        query_filter["data.engine.gpu_info.gpus.0.name"] = gpu_name
+                        query_filter["data.engine.gpu_info.num_gpus"] = num_gpus
+                    except ValueError:
+                        logger.error(f"Invalid GPU count in filter: {num_gpus_str}")
+            
+            # Log the query we're about to execute
+            logger.info(f"MongoDB query filter: {query_filter}")
+            
+            # Execute the query with the filters
+            results = list(collection.find(query_filter))
+            
+            logger.info(f"Retrieved {len(results)} documents from MongoDB")
             
             # Get a list of all unique client_ids from the results
             client_ids = set()
@@ -300,6 +336,15 @@ def load_runs(source: str = "local") -> List[Dict]:
                 # Extract the actual data from the nested 'data' field if present
                 run_data = doc.get('data', doc)  # Use document directly if no 'data' field
                 run_data['upload_datetime'] = doc.get('upload_datetime')
+                
+                # Apply custom benchmark filter if needed (needs to be done in Python)
+                if not show_custom_benchmarks:
+                    benchmark_type = run_data.get("benchmark", {}).get("type", "Unknown")
+                    benchmark_config = run_data.get("benchmark", {}).get("config", {})
+                    
+                    if not is_predefined_benchmark(benchmark_type, benchmark_config):
+                        continue  # Skip this record if it's a custom benchmark
+                
                 # Add user details to the run data
                 client_id = doc.get('client_id')
                 if client_id and client_id in user_data:
@@ -316,6 +361,8 @@ def load_runs(source: str = "local") -> List[Dict]:
             
         except Exception as e:
             logger.error(f"Error loading global runs from MongoDB: {e}")
+            import traceback
+            logger.error(traceback.format_exc())
             return []
 
 def get_predefined_benchmark_configs() -> Dict[str, Dict[str, Any]]:
@@ -464,7 +511,14 @@ def _create_leaderboard_entry(doc):
 
 def get_filtered_data(source: str = "local", model_filter: Optional[str] = None, engine_filter: Optional[str] = None, benchmark_filter: Optional[str] = None, gpu_filter: Optional[str] = None, show_custom_benchmarks: bool = False) -> Dict[str, List[str]]:
     """Get all filter data (models, engines, benchmarks, GPUs) in one function call"""
-    runs = load_runs(source=source)
+    runs = load_runs(
+        source=source,
+        model_filter=model_filter,
+        engine_filter=engine_filter,
+        benchmark_filter=benchmark_filter,
+        gpu_filter=gpu_filter,
+        show_custom_benchmarks=show_custom_benchmarks
+    )
         
     # Initialize sets for each filter type
     models = set()
@@ -551,9 +605,6 @@ def get_filtered_data(source: str = "local", model_filter: Optional[str] = None,
                 gpu_types.add(gpu_info)
 
         for doc in runs:
-            if not _passes_filters(doc, model_filter, engine_filter, benchmark_filter, gpu_filter, show_custom_benchmarks):
-                continue
-                
             entry = _create_leaderboard_entry(doc)
             leaderboard_entries.append(entry)
             
