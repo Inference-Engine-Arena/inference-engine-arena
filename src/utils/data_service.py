@@ -30,6 +30,11 @@ MONGO_COLLECTION = "json_data"
 
 ANONYMOUS_AVATAR_URL = "https://p3-pc-sign.douyinpic.com/tos-cn-i-0813/7f9184a875b24dad937a1e1f924b600c~tplv-dy-aweme-images:q75.webp?biz_tag=aweme_images&from=327834062&lk3s=138a59ce&s=PackSourceEnum_SEARCH&sc=image&se=false&x-expires=1747274400&x-signature=FN58S31JYmIHGeOZTQS%2FrygGR2c%3D"
 
+# Global MongoDB client
+_mongo_client = None
+_mongo_db = None
+_mongo_collection = None
+_mongo_users_collection = None
 
 # Cache for predefined benchmark configs - load only once at module import time
 _PREDEFINED_BENCHMARK_CONFIGS = {}
@@ -71,6 +76,35 @@ def _load_predefined_benchmark_configs():
 # Initialize configs at module import time
 _PREDEFINED_BENCHMARK_CONFIGS = _load_predefined_benchmark_configs()
 logger.info(f"Loaded {len(_PREDEFINED_BENCHMARK_CONFIGS)} predefined benchmark configs at module initialization")
+
+def get_mongo_connection():
+    """Get or create MongoDB connection"""
+    global _mongo_client, _mongo_db, _mongo_collection, _mongo_users_collection
+    
+    if _mongo_client is None and MONGO_URI and DB_NAME:
+        try:
+            # Initialize MongoDB connection
+            _mongo_client = MongoClient(MONGO_URI)
+            _mongo_db = _mongo_client[DB_NAME]
+            _mongo_collection = _mongo_db[MONGO_COLLECTION]
+            _mongo_users_collection = _mongo_db['users']
+            
+            # Ping to verify connection
+            _mongo_client.admin.command('ping')
+            
+            logger.info("MongoDB connection established")
+        except Exception as e:
+            logger.error(f"Error connecting to MongoDB: {e}")
+            # Reset variables in case of error
+            _mongo_client = None
+            _mongo_db = None
+            _mongo_collection = None
+            _mongo_users_collection = None
+    
+    return _mongo_client, _mongo_db, _mongo_collection, _mongo_users_collection
+
+# Initialize MongoDB connection at module load time
+get_mongo_connection()
 
 class ResultsFileHandler(FileSystemEventHandler):
     """Handler for file system events related to results files"""
@@ -232,18 +266,14 @@ def load_runs(source: str = "local") -> List[Dict]:
         
         return sorted(runs, key=lambda r: r.get("start_time", ""), reverse=True)
     else:  # global
-        # Connect to MongoDB directly for global runs
+        # Get existing MongoDB connection or create a new one
+        client, db, collection, users_collection = get_mongo_connection()
+        
+        if not client:
+            logger.error("Could not establish MongoDB connection")
+            return []
+        
         try:
-            # Initialize MongoDB connection using constants
-            client = MongoClient(MONGO_URI)
-            db = client[DB_NAME]
-            collection = db[MONGO_COLLECTION]
-            users_collection = db['users']  # Get the users collection for avatar URLs
-            
-            # Ping to verify connection
-            client.admin.command('ping')
-
-            
             # Query MongoDB for all JSON data - get everything directly
             results = list(collection.find({}))
             
