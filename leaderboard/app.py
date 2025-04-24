@@ -963,14 +963,14 @@ def create_interface():
             with gr.Row(elem_classes="search-button-container"):
                 search_button = gr.Button("Apply Filters", variant="primary")
         
-        # Leaderboard display
-        leaderboard_html = gr.HTML(render_leaderboard(state))
-        
         # Create plot - directly use Gradio's plot component with the figure
         with gr.Column(visible=True):
             gr.HTML("<h2 style='text-align: center; margin-top: 20px;'>Inference Performance Comparison (Smart AI Fast Response (TPS for 1 User) vs Throughput (TPS))</h2>")
             plot = gr.Plot(value=create_performance_scatter_plot(state))
             plot_message = gr.HTML("<div style='text-align: center; font-size: 0.9rem; margin-top: 10px; color: #888;'>X-axis: Smart AI Fast Response (TPS for 1 User) | Y-axis: Throughput (TPS)</div>")
+            
+        # Leaderboard display
+        leaderboard_html = gr.HTML(render_leaderboard(state))
         
         def wrapped_refresh_data():
             state.refresh_data()
