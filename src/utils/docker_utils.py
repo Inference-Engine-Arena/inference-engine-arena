@@ -277,12 +277,15 @@ def extract_container_environment_variables(container_detail: Dict[str, Any], pr
         Dict[str, str]: Dictionary of environment variables
     """
     env_vars = {}
+
+     # List of environment variables to exclude
+    excluded_env_vars = ["VLLM_USAGE_SOURCE", "HF_TOKEN", "HUGGING_FACE_HUB_TOKEN"]
+
     if "Config" in container_detail and "Env" in container_detail["Config"]:
         for env_var in container_detail["Config"]["Env"]:
             if "=" in env_var:
                 key, value = env_var.split("=", 1)
-                # Ignore VLLM_USAGE_SOURCE variable, as it is not specified by the user
-                if prefix and key == "VLLM_USAGE_SOURCE":
+                if key in excluded_env_vars:
                     continue
                 if prefix is None or key.lower().startswith(prefix.lower()):
                     env_vars[key] = value
