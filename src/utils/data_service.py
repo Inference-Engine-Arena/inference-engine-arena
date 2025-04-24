@@ -30,6 +30,48 @@ MONGO_COLLECTION = "json_data"
 
 ANONYMOUS_AVATAR_URL = "https://p3-pc-sign.douyinpic.com/tos-cn-i-0813/7f9184a875b24dad937a1e1f924b600c~tplv-dy-aweme-images:q75.webp?biz_tag=aweme_images&from=327834062&lk3s=138a59ce&s=PackSourceEnum_SEARCH&sc=image&se=false&x-expires=1747274400&x-signature=FN58S31JYmIHGeOZTQS%2FrygGR2c%3D"
 
+
+# Cache for predefined benchmark configs - load only once at module import time
+_PREDEFINED_BENCHMARK_CONFIGS = {}
+
+def _load_predefined_benchmark_configs():
+    """Load predefined benchmark configurations from YAML files on module import.
+    This is called once when the module is loaded to populate _PREDEFINED_BENCHMARK_CONFIGS.
+    """
+    configs = {}
+    
+    # Check a few simple paths in priority order
+    possible_paths = [
+        Path(__file__).parent / "benchmarks" / "benchmark_configs",  # Most common case
+        Path(__file__).parent.parent / "benchmarks" / "benchmark_configs",  # When in installed package
+    ]
+    
+    # Find first existing path
+    config_dir = None
+    for path in possible_paths:
+        if path.exists():
+            config_dir = path
+            break
+    
+    if not config_dir:
+        logger.warning(f"Benchmark config directory not found: {[str(p) for p in possible_paths]}")
+        return configs
+    
+    for config_file in config_dir.glob("*.yaml"):
+        benchmark_name = config_file.stem
+        try:
+            with open(config_file, 'r') as f:
+                config = yaml.safe_load(f)
+            configs[benchmark_name] = config
+        except Exception as e:
+            logger.error(f"Failed to load benchmark config {config_file}: {e}")
+    
+    return configs
+
+# Initialize configs at module import time
+_PREDEFINED_BENCHMARK_CONFIGS = _load_predefined_benchmark_configs()
+logger.info(f"Loaded {len(_PREDEFINED_BENCHMARK_CONFIGS)} predefined benchmark configs at module initialization")
+
 class ResultsFileHandler(FileSystemEventHandler):
     """Handler for file system events related to results files"""
     
@@ -247,40 +289,13 @@ def load_runs(source: str = "local") -> List[Dict]:
             return []
 
 def get_predefined_benchmark_configs() -> Dict[str, Dict[str, Any]]:
-    """Load predefined benchmark configurations from YAML files.
+    """Get the predefined benchmark configurations.
     
     Returns:
         Dict[str, Dict[str, Any]]: Dictionary of benchmark configs
     """
-    configs = {}
-    
-    # Check a few simple paths in priority order
-    possible_paths = [
-        Path(__file__).parent / "benchmarks" / "benchmark_configs",  # Most common case
-        Path(__file__).parent.parent / "benchmarks" / "benchmark_configs",  # When in installed package
-    ]
-    
-    # Find first existing path
-    config_dir = None
-    for path in possible_paths:
-        if path.exists():
-            config_dir = path
-            break
-    
-    if not config_dir:
-        logger.warning(f"Benchmark config directory not found: {[str(p) for p in possible_paths]}")
-        return configs
-    
-    for config_file in config_dir.glob("*.yaml"):
-        benchmark_name = config_file.stem
-        try:
-            with open(config_file, 'r') as f:
-                config = yaml.safe_load(f)
-            configs[benchmark_name] = config
-        except Exception as e:
-            logger.error(f"Failed to load benchmark config {config_file}: {e}")
-    
-    return configs
+    # Simply return the already loaded configs
+    return _PREDEFINED_BENCHMARK_CONFIGS
 
 def is_predefined_benchmark(benchmark_type: str, benchmark_config: Dict[str, Any]) -> bool:
     """Check if a benchmark is predefined (vs custom).
@@ -505,7 +520,6 @@ def get_filtered_data(source: str = "local", model_filter: Optional[str] = None,
                 gpu_info = f"{gpus[0].get('name', 'Unknown')} ({len(gpus)}x)"
                 gpu_types.add(gpu_info)
 
-            # Skip if filtered out
         for doc in runs:
             if not _passes_filters(doc, model_filter, engine_filter, benchmark_filter, gpu_filter, show_custom_benchmarks):
                 continue
