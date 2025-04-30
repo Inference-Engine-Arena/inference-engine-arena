@@ -425,7 +425,7 @@ class BenchmarkRunner:
                 logger.info(f"Benchmark completed successfully. Key metrics: "
                            f"input_throughput={metrics.get('input_throughput', 'N/A')}, "
                            f"output_throughput={metrics.get('output_throughput', 'N/A')}, "
-                           f"ttft={metrics.get('ttft', 'N/A')}")
+                           f"mean_ttft_ms={metrics.get('mean_ttft_ms', 'N/A')}")
             
         except Exception as e:
             logger.exception(f"Error executing benchmark: {e}")
@@ -472,9 +472,26 @@ class BenchmarkRunner:
                 metrics["input_throughput"] = results_data.get("total_token_throughput", 0) - results_data.get("output_throughput", 0)
                 metrics["output_throughput"] = results_data.get("output_throughput", 0)
                 
-                # Latency metrics
-                metrics["ttft"] = results_data.get("mean_ttft_ms", 0)  # Time to First Token
-                metrics["tpot"] = results_data.get("mean_tpot_ms", 0)  # Time Per Output Token
+                # TTFT (Time to First Token) metrics
+                metrics["mean_ttft_ms"] = results_data.get("mean_ttft_ms", 0)
+                metrics["median_ttft_ms"] = results_data.get("median_ttft_ms", 0)
+                metrics["std_ttft_ms"] = results_data.get("std_ttft_ms", 0)
+                metrics["p99_ttft_ms"] = results_data.get("p99_ttft_ms", 0)
+                
+                # TPOT (Time Per Output Token) metrics
+                metrics["mean_tpot_ms"] = results_data.get("mean_tpot_ms", 0)
+                metrics["median_tpot_ms"] = results_data.get("median_tpot_ms", 0)
+                metrics["std_tpot_ms"] = results_data.get("std_tpot_ms", 0)
+                metrics["p99_tpot_ms"] = results_data.get("p99_tpot_ms", 0)
+                
+                # ITL (Inter-Token Latency) metrics
+                metrics["mean_itl_ms"] = results_data.get("mean_itl_ms", 0)
+                metrics["median_itl_ms"] = results_data.get("median_itl_ms", 0)
+                metrics["std_itl_ms"] = results_data.get("std_itl_ms", 0)
+                metrics["p99_itl_ms"] = results_data.get("p99_itl_ms", 0)
+
+                metrics["request_throughput"] = results_data.get("request_throughput", 0)
+                metrics["request_goodput"] = results_data.get("request_goodput", 0)
                 
                 # Additional metrics
                 metrics["duration"] = results_data.get("duration", 0)

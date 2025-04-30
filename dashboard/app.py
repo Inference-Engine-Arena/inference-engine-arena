@@ -290,10 +290,10 @@ def create_performance_charts(run):
         metrics = subrun.get("metrics", {})
         input_throughputs.append(float(metrics.get("input_throughput", 0)))
         output_throughputs.append(float(metrics.get("output_throughput", 0)))
-        ttfts.append(float(metrics.get("ttft", 0)))
+        ttfts.append(float(metrics.get("mean_ttft_ms", 0)))
         
         # Get TPOT and calculate per request throughput (1/TPOT)
-        tpot = float(metrics.get("tpot", 0))
+        tpot = float(metrics.get("mean_tpot_ms", 0))
         tpots.append(tpot)
         
         # Calculate per request throughput (1/TPOT) - avoid division by zero
@@ -561,8 +561,8 @@ def display_run(state, run_index):
         html += f"<td>{benchmark_config_html}</td>"
         html += f"<td>{format_metric(metrics.get('input_throughput'))}</td>"
         html += f"<td>{format_metric(metrics.get('output_throughput'))}</td>"
-        html += f"<td>{format_metric(metrics.get('ttft'))}</td>"
-        html += f"<td>{format_metric(metrics.get('tpot'))}</td>"
+        html += f"<td>{format_metric(metrics.get('mean_ttft_ms'))}</td>"
+        html += f"<td>{format_metric(metrics.get('mean_tpot_ms'))}</td>"
         html += f"<td>{per_request_throughput}</td>"
         html += "</tr>"
     

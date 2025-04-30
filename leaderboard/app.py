@@ -622,8 +622,8 @@ def render_leaderboard(state):
         else:
             html += "<td>N/A</td>"
             
-        html += f"<td>{row['ttft']:.2f}</td>"
-        html += f"<td>{row['tpot']:.2f}</td>"
+        html += f"<td>{row['mean_ttft_ms']:.2f}</td>"
+        html += f"<td>{row['mean_tpot_ms']:.2f}</td>"
         
         # Add per request throughput column
         per_request_throughput = row.get('per_request_throughput')
