@@ -486,6 +486,7 @@ def display_run(state, run_index):
     html += "<table>"
     html += "<tr>"
     html += "<th style='width: 10%;'>ID</th>"
+    html += "<th style='width: 5%;'>Success</th>"
     html += "<th style='width: 8%;'>Engine</th>"
     html += "<th style='width: 15%;'>Env Vars</th>"  
     html += "<th style='width: 15%;'>Engine Args</th>" 
@@ -495,13 +496,15 @@ def display_run(state, run_index):
     html += "<th style='width: 5%;'>Output Throughput</th>"
     html += "<th style='width: 5%;'>TTFT (ms)</th>"
     html += "<th style='width: 5%;'>TPOT (ms)</th>"
-    html += "<th style='width: 9%;'>Per Request Throughput (t/s/req)</th>"
+    html += "<th style='width: 5%;'>Per Request Throughput (t/s/req)</th>"
     html += "</tr>"
     
     for subrun in run.get("subruns", []):
         engine = subrun.get("engine", {})
         benchmark = subrun.get("benchmark", {})
         metrics = subrun.get("metrics", {})
+        exit_code = subrun.get("exit_code")
+        success_emoji = "✅" if exit_code == 0 else "❌"
         
          # Helper to format metrics safely
         def format_metric(value):
@@ -550,11 +553,12 @@ def display_run(state, run_index):
         
         html += "<tr>"
         html += f"<td>{subrun.get('id', 'N/A')}</td>"
+        html += f"<td style='text-align: center;'>{success_emoji}</td>" 
         html += f"<td>{engine.get('name', 'N/A')}</td>"
-        html += f"<td>{env_vars_html}</td>"  # Added env_vars column
-        html += f"<td>{engine_args_html}</td>"  # Added engine_args column
+        html += f"<td>{env_vars_html}</td>"
+        html += f"<td>{engine_args_html}</td>"
         html += f"<td>{benchmark.get('type', 'N/A')}</td>"
-        html += f"<td>{benchmark_config_html}</td>"  # Added benchmark config column
+        html += f"<td>{benchmark_config_html}</td>"
         html += f"<td>{format_metric(metrics.get('input_throughput'))}</td>"
         html += f"<td>{format_metric(metrics.get('output_throughput'))}</td>"
         html += f"<td>{format_metric(metrics.get('ttft'))}</td>"
@@ -588,6 +592,12 @@ def display_subrun(state, run_index, subrun_index):
         per_request_throughput = f"{1000.0 / tpot:.2f}"  # Convert to requests per second
     
     html = "<h2>Sub-run Details</h2>"
+    
+    # Determine success status
+    exit_code = subrun.get("exit_code")
+    success_status = "✅ Success" if exit_code == 0 else "❌ Failed"
+    html += f"<p><strong>Success:</strong> {success_status}</p>"
+    
     html += f"<p><strong>ID:</strong> {subrun.get('id', 'N/A')}</p>"
     html += f"<p><strong>Start Time:</strong> {format_timestamp(subrun.get('start_time', 'N/A'))}</p>"
     html += f"<p><strong>Model:</strong> {subrun.get('model', 'N/A')}</p>"
