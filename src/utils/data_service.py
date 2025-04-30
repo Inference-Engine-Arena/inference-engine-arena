@@ -473,7 +473,7 @@ def _create_leaderboard_entry(doc):
         )
     
     # Calculate per request throughput
-    tpot = doc.get("metrics", {}).get("tpot", 0)
+    tpot = doc.get("metrics", {}).get("mean_tpot_ms", 0)
     per_request_throughput = 1000 / tpot if tpot > 0 else None
     
     entry = {

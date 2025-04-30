@@ -379,10 +379,10 @@ def process_leaderboard_data(state):
     df = pd.DataFrame(entries)
     
     # Check and potentially calculate per_request_throughput if it's missing
-    if 'per_request_throughput' not in df.columns and 'tpot' in df.columns:
+    if 'per_request_throughput' not in df.columns and 'mean_tpot_ms' in df.columns:
         logger.info("Calculating per_request_throughput from TPOT")
         # Convert ms to seconds and calculate requests per second
-        df['per_request_throughput'] = df['tpot'].apply(lambda x: 1000.0 / float(x) if float(x) > 0 else 0)
+        df['per_request_throughput'] = df['mean_tpot_ms'].apply(lambda x: 1000.0 / float(x) if float(x) > 0 else 0)
     
     # Apply precision filter if set
     if state.precision_filter is not None and state.precision_filter != "All Precision":

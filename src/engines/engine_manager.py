@@ -11,7 +11,6 @@ from src.utils.docker_utils import (
     list_running_containers, 
     extract_container_environment_variables,
     extract_container_engine_args,
-    get_container_status
 )
 
 

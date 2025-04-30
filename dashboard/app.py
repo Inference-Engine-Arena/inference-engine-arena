@@ -514,7 +514,7 @@ def display_run(state, run_index):
                 return "N/A"
             
         # Calculate per request throughput
-        tpot = float(metrics.get("tpot", 0))
+        tpot = float(metrics.get("mean_tpot_ms", 0))
         per_request_throughput = "N/A"
         if tpot > 0:
             per_request_throughput = f"{1000.0 / tpot:.2f}"  # Convert to requests per second with 2 decimal places
@@ -586,7 +586,7 @@ def display_subrun(state, run_index, subrun_index):
     metrics = subrun.get("metrics", {})
     
     # Calculate per request throughput
-    tpot = float(metrics.get("tpot", 0))
+    tpot = float(metrics.get("mean_tpot_ms", 0))
     per_request_throughput = "N/A"
     if tpot > 0:
         per_request_throughput = f"{1000.0 / tpot:.2f}"  # Convert to requests per second
