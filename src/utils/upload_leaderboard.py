@@ -10,9 +10,12 @@ import os
 import webbrowser
 from pathlib import Path
 import uuid
+from dotenv import load_dotenv
+
+load_dotenv()
 
 # Configuration
-API_BASE_URL = "https://iearena.org"
+API_BASE_URL = os.getenv('API_BASE_URL')
 
 AUTH_DIR = Path(__file__).parent.parent.parent / '.global_auth'
 TOKEN_FILE = AUTH_DIR / 'auth_token.json'
