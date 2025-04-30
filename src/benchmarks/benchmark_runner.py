@@ -626,17 +626,16 @@ class BenchmarkRunner:
                         
                         if not success:
                             logger.error(f"Failed to start engine: {engine.name}")
-                            continue
-                        
-                        logger.info(f"Engine started successfully: {engine.name}")
-                        
-                        # Refresh engine status to get the latest info
-                        engine_manager.refresh_engines()
-                        engine = engine_manager.get_engine_by_name(engine.name)
-                        
+                            engine.env_vars = env_vars
+
+                        else:                        
+                            logger.info(f"Engine started successfully: {engine.name}")
+                             # Refresh engine status to get the latest info
+                            engine_manager.refresh_engines()
+                            engine = engine_manager.get_engine_by_name(engine.name)
+     
                         if not engine or engine.status != "running":
                             logger.error(f"Engine {engine_type} is not running after start")
-                            continue
                         
                         # Run each benchmark for this engine
                         for benchmark_idx, benchmark_config in enumerate(benchmark_configs):

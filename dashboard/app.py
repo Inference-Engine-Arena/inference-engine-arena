@@ -597,7 +597,7 @@ def display_subrun(state, run_index, subrun_index):
     html += "<table>"
     html += "<tr><th style='width: 25%;'>Name</th><td>" + engine.get("name", "N/A") + "</td></tr>"
     
-    gpus = engine["gpu_info"]["gpus"]
+    gpus = engine.get("gpu_info", {}).get("gpus", [])
     gpu_names = [gpu.get("name", "Unknown") for gpu in gpus]
     html += f"<tr><th>GPUs</th><td>{', '.join(gpu_names)} (x{len(gpus)})</td></tr>"
     
@@ -668,13 +668,16 @@ def display_subrun(state, run_index, subrun_index):
     html += "<h3>Full Engine Arguments</h3>"
     html += "<div style='margin-bottom: 20px;'>"
     html += "<pre style='white-space: pre-wrap; word-break: break-word; background-color: #f8f8f8; padding: 12px; border-radius: 4px; max-height: 300px; overflow-y: auto;'>"
-    if isinstance(engine["full_engine_args"], dict):
-        for key, value in sorted(engine["full_engine_args"].items()):
-            html += f"--{key}={value}\n"
-    elif isinstance(engine["full_engine_args"], list):
-        html += "\n".join(engine["full_engine_args"])
+    if engine.get("full_engine_args"):
+        if isinstance(engine["full_engine_args"], dict):
+            for key, value in sorted(engine["full_engine_args"].items()):
+                html += f"--{key}={value}\n"
+        elif isinstance(engine["full_engine_args"], list):
+            html += "\n".join(engine["full_engine_args"])
+        else:
+            html += str(engine["full_engine_args"])
     else:
-        html += str(engine["full_engine_args"])
+        html += "N/A"
     html += "</pre>"
     html += "</div>"
     
@@ -683,11 +686,14 @@ def display_subrun(state, run_index, subrun_index):
     html += "<h3>Full Environment Variables</h3>"
     html += "<div style='margin-bottom: 20px;'>"
     html += "<pre style='white-space: pre-wrap; word-break: break-word; background-color: #f8f8f8; padding: 12px; border-radius: 4px; max-height: 300px; overflow-y: auto;'>"
-    if isinstance(engine["full_env_vars"], dict):
-        for key, value in sorted(engine["full_env_vars"].items()):
-            html += f"{key}={value}\n"
+    if engine.get("full_env_vars"):
+        if isinstance(engine["full_env_vars"], dict):
+            for key, value in sorted(engine["full_env_vars"].items()):
+                html += f"{key}={value}\n"
+        else:
+            html += str(engine["full_env_vars"])
     else:
-        html += str(engine["full_env_vars"])
+        html += "N/A"
     html += "</pre>"
     html += "</div>"
 

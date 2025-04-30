@@ -10,7 +10,8 @@ from src.utils.docker_utils import (
     run_docker_command, 
     list_running_containers, 
     extract_container_environment_variables,
-    extract_container_engine_args
+    extract_container_engine_args,
+    get_container_status
 )
 
 
@@ -207,7 +208,7 @@ class EngineManager:
         if success:
             logger.info(f"Started engine {engine.name}")
         else:
-            logger.error(f"Failed to start engine {engine.name}")
+           logger.error(f"Failed to start engine {engine.name}")
         
         return success
     

@@ -11,6 +11,7 @@ from src.utils.docker_utils import (
     run_docker_command, 
     get_container_logs,
     stream_container_logs,
+    get_container_status,
 )
 from src.utils.utils import stream_process_output, get_environment_variables_from_command_line
 
@@ -150,9 +151,20 @@ class VLLMEngine(BaseEngine):
             print(f"Waiting up to {self.startup_timeout} seconds for server to be ready...")
             start_time = time.time()
             ready = False
+            error_message = None
             
             try:
                 while time.time() - start_time < self.startup_timeout:
+                    # Check container status - only do this after container is confirmed to have started
+                    container_status = get_container_status(self.container_id)
+                    
+                    # If the container exists but has changed to 'exited' status, it means startup has failed
+                    if container_status == "exited":
+                        error_message = f"Container exited unexpectedly. Check logs for details."
+                        print(f"\n❌ {error_message}")
+                        break
+                    
+                    # Check if server is ready
                     if self._check_if_ready():
                         self.status = "running"
                         ready = True
@@ -168,8 +180,8 @@ class VLLMEngine(BaseEngine):
                 print(f"\n✅ {self.name} server is ready at {self.get_endpoint()}")
                 return True
             else:
-                # If we reached here, server didn't start in time
-                print(f"\n❌ {self.name} server failed to start within the timeout period")
+                # If we reached here, server didn't start well
+                print(f"\n❌ {self.name} server failed to start")
                 self.stop()
                 return False
         

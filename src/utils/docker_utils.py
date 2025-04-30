@@ -389,3 +389,27 @@ def get_model_config_json(container_id: str, model_name: str) -> Optional[Dict[s
     except Exception as e:
         logger.error(f"Error getting model config: {e}")
         return None
+
+
+def get_container_status(container_id: str) -> str:
+    """
+    Get the status of a Docker container.
+    
+    Args:
+        container_id: Docker container ID
+        
+    Returns:
+        str: Container status (e.g., "running", "exited", "created", etc.)
+    """
+    if not container_id:
+        return "unknown"
+        
+    cmd = ["docker", "inspect", "--format", "{{.State.Status}}", container_id]
+    result = run_docker_command(cmd)
+    
+    if result["success"] and result["output"].strip():
+        # Return the status in lowercase
+        return result["output"].strip().lower()
+    else:
+        logger.error(f"Failed to get status for container {container_id}: {result.get('error', 'Unknown error')}")
+        return "unknown"
