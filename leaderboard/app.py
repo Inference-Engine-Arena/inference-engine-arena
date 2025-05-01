@@ -925,8 +925,8 @@ def create_interface():
         with gr.Row(elem_classes="filter-section"):
             with gr.Row():
                 model_dropdown = gr.Dropdown(choices=state.get_models(), label="Model", value="All Models")
-                engine_dropdown = gr.Dropdown(choices=state.get_engines(), label="Engine", value="All Engines")
                 benchmark_dropdown = gr.Dropdown(choices=state.get_benchmark_types(), label="Benchmark", value="All Benchmarks")
+                engine_dropdown = gr.Dropdown(choices=state.get_engines(), label="Engine", value="All Engines")
                 gpu_dropdown = gr.Dropdown(choices=state.get_gpus(), label="GPU", value="All GPUs")
                 # Initialize precision dropdown but hide it initially
                 precision_dropdown = gr.Dropdown(choices=state.get_precision_types(), label="Precision", value="All Precision", visible=state.show_all_precision)
