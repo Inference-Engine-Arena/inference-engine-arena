@@ -77,8 +77,8 @@ class ArenaCommand:
     
     def _register_runyaml_command(self, subparsers):
         """Register the 'runyaml' command."""
-        yaml_parser = subparsers.add_parser("runyaml", help="Run benchmarks from a YAML configuration file")
-        yaml_parser.add_argument("config", help="Path to the YAML configuration file")
+        yaml_parser = subparsers.add_parser("runyaml", help="Run benchmarks from YAML configuration files")
+        yaml_parser.add_argument("config", nargs='+', help="Path(s) to the YAML configuration file(s)")
     
     def _register_logs_command(self, subparsers):
         """Register the 'logs' command."""
@@ -333,28 +333,51 @@ class ArenaCommand:
     
     def _handle_runyaml(self, args: argparse.Namespace) -> int:
         """Handle the 'runyaml' command."""
-        # Use the new run_benchmark_from_yaml method in BenchmarkRunner
-        result = self.benchmark_runner.run_benchmark_from_yaml(
-            yaml_file=args.config,
-            engine_manager=self.engine_manager
-        )
+        yaml_files = args.config
         
-        if not result.get("success", False):
-            logger.error(f"Failed to run benchmarks from YAML: {result.get('error', 'Unknown error')}")
-            return 1
+        overall_success = True
+        run_summaries = []
         
-        # Display result summary
-        print("\nBenchmark Run Summary:")
-        print(f"  Run ID: {result['id']}")
-        print(f"  Start time: {result['start_time']}")
-        print(f"  End time: {result['end_time']}")
-        print(f"  Duration: {result['duration_seconds']:.1f} seconds")
-        print(f"  Engines: {', '.join(result['engines'])}")
-        print(f"  Benchmark types: {', '.join(result['benchmark_types'])}")
-        print(f"  Sub-runs: {len(result['sub_runs'])}")
-        print(f"\nResults saved to: ./results/{result['id']}")
+        for yaml_file in yaml_files:
+            logger.info(f"Processing YAML file: {yaml_file}")
+            
+            if not os.path.exists(yaml_file):
+                logger.error(f"YAML file not found: {yaml_file}")
+                overall_success = False
+                continue
+                
+            # Use the run_benchmark_from_yaml method in BenchmarkRunner
+            result = self.benchmark_runner.run_benchmark_from_yaml(
+                yaml_file=yaml_file,
+                engine_manager=self.engine_manager
+            )
+            
+            if not result.get("success", False):
+                logger.error(f"Failed to run benchmarks from YAML: {result.get('error', 'Unknown error')}")
+                overall_success = False
+            
+            run_summaries.append(result)
+            
+            # Display result summary
+            print("\nBenchmark Run Summary:")
+            print(f"  Run ID: {result['id']}")
+            print(f"  Start time: {result['start_time']}")
+            print(f"  End time: {result['end_time']}")
+            print(f"  Duration: {result['duration_seconds']:.1f} seconds")
+            print(f"  Engines: {', '.join(result['engines'])}")
+            print(f"  Benchmark types: {', '.join(result['benchmark_types'])}")
+            print(f"  Sub-runs: {len(result['sub_runs'])}")
+            print(f"\nResults saved to: ./results/{result['id']}")
         
-        return 0
+        # Overall summary
+        if len(yaml_files) > 1:
+            print("\n" + "=" * 80)
+            print(f"OVERALL SUMMARY: Processed {len(yaml_files)} YAML files")
+            print(f"  Overall status: {'SUCCESS' if overall_success else 'FAILURE'}")
+            print(f"  Total runs: {len(run_summaries)}")
+            print("=" * 80 + "\n")
+        
+        return 0 if overall_success else 1
     
     def _handle_dashboard(self, args: argparse.Namespace) -> int:
         """Handle the 'dashboard' command."""
