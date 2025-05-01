@@ -10,7 +10,7 @@ from src.utils.docker_utils import (
     run_docker_command, 
     list_running_containers, 
     extract_container_environment_variables,
-    extract_container_engine_args,
+    extract_container_engine_args
 )
 
 
@@ -136,7 +136,8 @@ class EngineManager:
                 env_vars = {}
                 
                 # Extract environment variables
-                env_vars = extract_container_environment_variables(container_detail, engine_type)
+                prefix = "SGL" if engine_type.lower() == "sglang" else engine_type
+                env_vars = extract_container_environment_variables(container_detail, prefix)
                 
                 # Try to get model and engine args from command args
                 model, engine_args = extract_container_engine_args(container_detail)
