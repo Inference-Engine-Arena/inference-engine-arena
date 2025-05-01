@@ -214,6 +214,10 @@ class LeaderboardState:
         self.show_all_precision = False  # New checkbox
         self.show_custom_benchmarks = False
         
+        # Custom plot metrics
+        self.x_metric = "Output Throughput (tokens/s)"  # Default x-axis metric
+        self.y_metric = "TTFT (ms)"  # Default y-axis metric
+        
         # Cache for filter data
         self.filter_data = None
         
@@ -353,6 +357,26 @@ class LeaderboardState:
     def update_show_custom_benchmarks(self, value):
         """Update show custom benchmarks flag"""
         self.show_custom_benchmarks = value
+        
+    def update_x_metric(self, value):
+        """Update x-axis metric for custom plot"""
+        self.x_metric = value
+        
+    def update_y_metric(self, value):
+        """Update y-axis metric for custom plot"""
+        self.y_metric = value
+        
+    def get_available_metrics(self):
+        """Get list of available metrics for plotting"""
+        return [
+            "Input Throughput (tokens/s)",
+            "Input $/1M tokens",
+            "Output Throughput (tokens/s)",
+            "Output $/1M tokens",
+            "TTFT (ms)",
+            "TPOT (ms)",
+            "Per Request Throughput (t/s/req)"
+        ]
 
 def check_value_match(row_value, search_value):
     """Helper function to compare values with special handling for booleans"""
@@ -906,7 +930,257 @@ def create_performance_scatter_plot(state):
         import traceback
         logger.error(traceback.format_exc())
         return None
-    
+
+def create_custom_scatter_plot(state, x_metric, y_metric):
+    """Create a customizable scatter plot where users can select x and y metrics"""
+    try:
+        # Use the shared data processing
+        df = process_leaderboard_data(state)
+        
+        if df is None or df.empty:
+            logger.warning("No data available for plotting")
+            return None
+        
+        logger.info(f"DataFrame columns: {df.columns.tolist()}")
+        logger.info(f"DataFrame size: {len(df)} rows")
+        
+        # Map friendly names to actual column names
+        metric_mapping = {
+            "Input Throughput (tokens/s)": "input_throughput",
+            "Input $/1M tokens": "input_cost_per_million",
+            "Output Throughput (tokens/s)": "output_throughput",
+            "Output $/1M tokens": "output_cost_per_million",
+            "TTFT (ms)": "mean_ttft_ms",
+            "TPOT (ms)": "mean_tpot_ms",
+            "Per Request Throughput (t/s/req)": "per_request_throughput"
+        }
+        
+        x_column = metric_mapping.get(x_metric)
+        y_column = metric_mapping.get(y_metric)
+        
+        if not x_column or not y_column:
+            logger.warning(f"Invalid metrics selected: x={x_metric}, y={y_metric}")
+            return None
+        
+        # Only keep rows with valid data for the selected metrics
+        df = df[(df[x_column].notna()) & (df[y_column].notna()) & (df[x_column] > 0) & (df[y_column] > 0)]
+        
+        if df.empty:
+            logger.warning("No valid data points for plotting after filtering")
+            return None
+            
+        # Create the figure with a black background
+        fig = go.Figure()
+        
+        # Get unique configuration groups
+        unique_groups = df['config_group'].unique()
+        
+        # Predefined color palette with distinct colors
+        color_palette = [
+            'rgb(31, 119, 180)',   # blue
+            'rgb(255, 127, 14)',    # orange
+            'rgb(44, 160, 44)',     # green
+            'rgb(214, 39, 40)',     # red
+            'rgb(148, 103, 189)',   # purple
+            'rgb(140, 86, 75)',     # brown
+            'rgb(227, 119, 194)',   # pink
+            'rgb(127, 127, 127)',   # gray
+            'rgb(188, 189, 34)',    # olive
+            'rgb(23, 190, 207)'     # cyan
+        ]
+        
+        # Assign colors to groups directly
+        colors = {}
+        for i, group in enumerate(unique_groups):
+            colors[group] = color_palette[i % len(color_palette)]
+            
+        # Determine common attributes for title
+        common_attributes = {}
+        
+        # Check if any filter is applied
+        if state.model_filter and state.model_filter != "All Models":
+            common_attributes["Model"] = state.model_filter
+        if state.engine_filter and state.engine_filter != "All Engines":
+            common_attributes["Engine"] = state.engine_filter
+        if state.gpu_filter and state.gpu_filter != "All GPUs":
+            common_attributes["GPU"] = state.gpu_filter
+        if state.benchmark_filter and state.benchmark_filter != "All Benchmarks":
+            common_attributes["Benchmark"] = state.benchmark_filter
+        if state.precision_filter and state.precision_filter != "All Precision":
+            common_attributes["Precision"] = state.precision_filter
+            
+        # If all data points have the same value for a column, add it as common
+        for col in ['model', 'engine', 'benchmark_type', 'gpu', 'precision']:
+            if col in df.columns and len(df[col].unique()) == 1:
+                attr_name = col.replace('_', ' ').title()
+                common_attributes[attr_name] = df[col].iloc[0]
+                
+        # Create title based on common attributes
+        if common_attributes:
+            unique_values = set(common_attributes.values())
+            title_parts = [f"{value}" for value in unique_values]
+            title = "" + ", ".join(title_parts)
+        else:
+            title = "Custom Inference Performance Comparison"
+
+        # Identify which columns have varying values
+        varying_columns = {}
+        for col in ['model', 'engine', 'benchmark_type', 'gpu', 'precision']:
+            if col in df.columns and len(df[col].unique()) > 1:
+                varying_columns[col] = df[col].unique()
+
+        def format_dict_for_tooltip(data, header):
+            """Format dictionary data for tooltip display with a header."""
+            result = f"<b>{header}:</b><br>"
+            
+            if isinstance(data, dict):
+                for key, value in data.items():
+                    result += f"{key}: {value}<br>"
+            else:
+                result += f"{str(data)}<br>"
+            
+            result += "<br>"
+            return result
+        
+        # Plot each group
+        for group in unique_groups:
+            group_df = df[df['config_group'] == group].copy()
+            # Sort by x-value for connected lines
+            group_df = group_df.sort_values(x_column)
+            
+            # Get an example row for the label
+            example = group_df.iloc[0]
+            
+            # Create a custom label that only includes the varying attributes
+            label_parts = []
+            for col in ['model', 'engine', 'benchmark_type', 'gpu', 'precision']:
+                if col in varying_columns:
+                    label_parts.append(f"{example[col]}")
+            
+            # If everything is the same (which would be strange in this context),
+            # at least show something distinctive
+            if not label_parts:
+                label = example['label']
+            else:
+                label = ",".join(label_parts)
+            
+            # Add scatter plot with lines and markers
+            fig.add_trace(
+                go.Scatter(
+                    x=group_df[x_column],
+                    y=group_df[y_column],
+                    mode='lines+markers',
+                    name=label,
+                    line=dict(color=colors[group], width=2),
+                    marker=dict(
+                        size=8,
+                        color=colors[group],
+                        line=dict(color='white', width=1)
+                    ),
+                    hovertemplate='<b>%{text}</b><extra></extra>',
+                    text=[
+                        f"Subrun ID: {row.get('id', 'N/A')}<br>" +
+                        f"{row['model']} - {row['engine']} ({row.get('precision', 'Unknown')})<br>" +
+                        f"{x_metric}: {row.get(x_column, 0):.2f}<br>" +
+                        f"{y_metric}: {row.get(y_column, 0):.2f}<br><br>" +
+                        f"Engine: {row['engine']}<br>" +
+                        format_dict_for_tooltip(row.get('engine_args', {}), "Engine Args") +
+                        format_dict_for_tooltip(row.get('env_vars', {}), "Env Vars") +
+                        f"Benchmark Type: {row['benchmark_type']}<br>" +
+                        format_dict_for_tooltip(row.get('benchmark_config', {}), "Benchmark Config") 
+                        for _, row in group_df.iterrows()
+                    ]
+                )
+            )
+        
+        # Update layout to match GTC keynote style
+        fig.update_layout(
+            # Dark theme with black background
+            template="plotly_dark",
+            paper_bgcolor='rgb(0, 0, 0)',
+            plot_bgcolor='rgb(0, 0, 0)',
+            
+            # Title styling
+            title=dict(
+                text=title,
+                font=dict(
+                    family="Arial, sans-serif",
+                    size=24,
+                    color="white"
+                ),
+                x=0.5,  # Center title
+                y=0.95  # Position at top
+            ),
+            
+            # Axis styling
+            xaxis=dict(
+                title=dict(
+                    text=x_metric,
+                    font=dict(
+                        family="Arial, sans-serif",
+                        size=14,
+                        color="white"
+                    )
+                ),
+                showgrid=True,
+                gridcolor='rgba(255,255,255,0.1)',
+                zeroline=True,
+                zerolinecolor='rgba(255,255,255,0.1)',
+                showline=True,
+                linecolor='rgba(255,255,255,0.5)',
+                tickfont=dict(color='white')
+            ),
+            
+            yaxis=dict(
+                title=dict(
+                    text=y_metric,
+                    font=dict(
+                        family="Arial, sans-serif",
+                        size=14,
+                        color="white"
+                    )
+                ),
+                showgrid=True,
+                gridcolor='rgba(255,255,255,0.1)',
+                zeroline=True,
+                zerolinecolor='rgba(255,255,255,0.1)',
+                showline=True,
+                linecolor='rgba(255,255,255,0.5)',
+                tickfont=dict(color='white')
+            ),
+            
+            # Legend styling
+            legend=dict(
+                font=dict(
+                    family="Arial, sans-serif",
+                    size=12,
+                    color="white"
+                ),
+                bgcolor='rgba(0,0,0,0.5)',
+                bordercolor='rgba(255,255,255,0.2)',
+                borderwidth=1,
+                orientation="h",  # Horizontal legend
+                y=-0.15,  # Position at bottom
+                x=0.5,   # Center
+                xanchor="center"
+            ),
+            
+            # Margins, size, hover behavior
+            margin=dict(l=60, r=40, t=80, b=60),
+            autosize=True,
+            height=700,
+            hovermode='closest',
+        )
+        
+        logger.info("Created custom scatter plot successfully")
+        return fig
+        
+    except Exception as e:
+        logger.exception(f"Error creating custom scatter plot: {str(e)}")
+        import traceback
+        logger.error(traceback.format_exc())
+        return None
+
 def create_interface():
     """Create the Gradio interface"""
     state = LeaderboardState()
@@ -969,14 +1243,34 @@ def create_interface():
             plot = gr.Plot(value=create_performance_scatter_plot(state))
             plot_message = gr.HTML("<div style='text-align: center; font-size: 0.9rem; margin-top: 10px; color: #888;'>X-axis: Smart AI Fast Response (TPS for 1 User) | Y-axis: Throughput (TPS)</div>")
             
+        # Custom plot with selectable metrics
+        with gr.Column(visible=True):
+            gr.HTML("<h2 style='text-align: center; margin-top: 20px;'>Custom Inference Performance Comparison</h2>")
+            
+            with gr.Row():
+                x_metric_dropdown = gr.Dropdown(
+                    choices=state.get_available_metrics(),
+                    label="X-Axis Metric",
+                    value=state.x_metric
+                )
+                y_metric_dropdown = gr.Dropdown(
+                    choices=state.get_available_metrics(),
+                    label="Y-Axis Metric",
+                    value=state.y_metric
+                )
+            
+            custom_plot = gr.Plot(value=create_custom_scatter_plot(state, state.x_metric, state.y_metric))
+            custom_plot_message = gr.HTML(f"<div style='text-align: center; font-size: 0.9rem; margin-top: 10px; color: #888;'>X-axis: {state.x_metric} | Y-axis: {state.y_metric}</div>")
+            
         # Leaderboard display
         leaderboard_html = gr.HTML(render_leaderboard(state))
         
         def wrapped_refresh_data():
             state.refresh_data()
             
-            # Try to create plot
+            # Try to create plots
             plot_fig = create_performance_scatter_plot(state)
+            custom_plot_fig = create_custom_scatter_plot(state, state.x_metric, state.y_metric)
             
             # Update all dropdowns with refreshed data
             return {
@@ -986,6 +1280,7 @@ def create_interface():
                 gpu_dropdown: gr.Dropdown(choices=state.get_gpus(), value=state.gpu_filter or "All GPUs"),
                 leaderboard_html: render_leaderboard(state),
                 plot: plot_fig,
+                custom_plot: custom_plot_fig,
                 last_update_html: f"<div class='timer'>Last update: <span id='last-update'>{state.get_formatted_update_time()}</span></div>"
             }
         
@@ -993,13 +1288,15 @@ def create_interface():
             """Toggle visibility of precision dropdown based on show_all_precision checkbox."""
             state.update_show_all_precision(show_all_precision)
             
-            # Try to create plot
+            # Try to create plots
             plot_fig = create_performance_scatter_plot(state)
+            custom_plot_fig = create_custom_scatter_plot(state, state.x_metric, state.y_metric)
             
             return {
                 precision_dropdown: gr.Dropdown(visible=show_all_precision),
                 leaderboard_html: render_leaderboard(state),
                 plot: plot_fig,
+                custom_plot: custom_plot_fig,
                 last_update_html: f"<div class='timer'>Last update: <span id='last-update'>{state.get_formatted_update_time()}</span></div>"
             }
         
@@ -1010,8 +1307,9 @@ def create_interface():
             if not state.show_details:
                 state.update_subrun_ids_filter(None)
                 state.update_argnv_pairs_filter(None)
-            # Try to create plot
+            # Try to create plots
             plot_fig = create_performance_scatter_plot(state)
+            custom_plot_fig = create_custom_scatter_plot(state, state.x_metric, state.y_metric)
             
             return {
                 advanced_filters_container: gr.Column(visible=show_details),
@@ -1019,6 +1317,7 @@ def create_interface():
                 argnv_pairs_textbox: "" if not show_details else argnv_pairs_textbox.value,
                 leaderboard_html: render_leaderboard(state),
                 plot: plot_fig,
+                custom_plot: custom_plot_fig,
                 last_update_html: f"<div class='timer'>Last update: <span id='last-update'>{state.get_formatted_update_time()}</span></div>"
             }
         
@@ -1045,14 +1344,42 @@ def create_interface():
             if needs_refresh:
                 state.refresh_data()
             
-            # Try to create plot
+            # Try to create plots
             plot_fig = create_performance_scatter_plot(state)
+            custom_plot_fig = create_custom_scatter_plot(state, state.x_metric, state.y_metric)
             
             # Return updated leaderboard and timestamp
             return {
                 leaderboard_html: render_leaderboard(state),
                 plot: plot_fig,
+                custom_plot: custom_plot_fig,
                 last_update_html: f"<div class='timer'>Last update: <span id='last-update'>{state.get_formatted_update_time()}</span></div>"
+            }
+        
+        def update_custom_plot(x_metric, y_metric, model, engine, benchmark, gpu, precision, subrun_ids, argnv_pairs, show_details, show_verified_sources, show_all_precision, show_custom_benchmarks):
+            """Update the custom plot with new metrics"""
+            state.update_x_metric(x_metric)
+            state.update_y_metric(y_metric)
+            
+            # Update existing filters to maintain context
+            state.update_model_filter(model)
+            state.update_engine_filter(engine)
+            state.update_benchmark_filter(benchmark)
+            state.update_gpu_filter(gpu)
+            state.update_precision_filter(precision)
+            state.update_subrun_ids_filter(subrun_ids)
+            state.update_argnv_pairs_filter(argnv_pairs)
+            state.update_show_details(show_details)
+            state.update_show_verified_sources(show_verified_sources)
+            state.update_show_all_precision(show_all_precision)
+            state.update_show_custom_benchmarks(show_custom_benchmarks)
+            
+            # Create new custom plot with updated metrics
+            custom_plot_fig = create_custom_scatter_plot(state, x_metric, y_metric)
+            
+            return {
+                custom_plot: custom_plot_fig,
+                custom_plot_message: f"<div style='text-align: center; font-size: 0.9rem; margin-top: 10px; color: #888;'>X-axis: {x_metric} | Y-axis: {y_metric}</div>"
             }
         
         def apply_advanced_filters(model, engine, benchmark, gpu, precision, subrun_ids, argnv_pairs, show_details, show_verified_sources, show_all_precision, show_custom_benchmarks):
@@ -1061,36 +1388,49 @@ def create_interface():
         
         # Connect UI elements to event handlers
         # Don't need to connect the source_btn anymore since it has a direct link
-        refresh_btn.click(wrapped_refresh_data, inputs=[], outputs=[model_dropdown, engine_dropdown, benchmark_dropdown, gpu_dropdown, leaderboard_html, plot, last_update_html])
+        refresh_btn.click(wrapped_refresh_data, inputs=[], outputs=[model_dropdown, engine_dropdown, benchmark_dropdown, gpu_dropdown, leaderboard_html, plot, custom_plot, last_update_html])
         
         # Special handler for show details checkbox to toggle advanced filters visibility
         show_details_checkbox.change(
             toggle_advanced_filters,
             inputs=[show_details_checkbox],
-            outputs=[advanced_filters_container, subrun_ids_textbox, argnv_pairs_textbox, leaderboard_html, plot, last_update_html]
+            outputs=[advanced_filters_container, subrun_ids_textbox, argnv_pairs_textbox, leaderboard_html, plot, custom_plot, last_update_html]
         )
         
         # Special handler for precision checkbox to toggle precision dropdown visibility
         show_all_precision_checkbox.change(
             toggle_precision_dropdown, 
             inputs=[show_all_precision_checkbox], 
-            outputs=[precision_dropdown, leaderboard_html, plot, last_update_html]
+            outputs=[precision_dropdown, leaderboard_html, plot, custom_plot, last_update_html]
         )
         
         # Connect standard filters to update handler
-        model_dropdown.change(wrapped_update_filters, inputs=[model_dropdown, engine_dropdown, benchmark_dropdown, gpu_dropdown, precision_dropdown, subrun_ids_textbox, argnv_pairs_textbox, show_details_checkbox, show_verified_sources_checkbox, show_all_precision_checkbox, show_custom_benchmarks_checkbox], outputs=[leaderboard_html, plot, last_update_html])
-        engine_dropdown.change(wrapped_update_filters, inputs=[model_dropdown, engine_dropdown, benchmark_dropdown, gpu_dropdown, precision_dropdown, subrun_ids_textbox, argnv_pairs_textbox, show_details_checkbox, show_verified_sources_checkbox, show_all_precision_checkbox, show_custom_benchmarks_checkbox], outputs=[leaderboard_html, plot, last_update_html])
-        benchmark_dropdown.change(wrapped_update_filters, inputs=[model_dropdown, engine_dropdown, benchmark_dropdown, gpu_dropdown, precision_dropdown, subrun_ids_textbox, argnv_pairs_textbox, show_details_checkbox, show_verified_sources_checkbox, show_all_precision_checkbox, show_custom_benchmarks_checkbox], outputs=[leaderboard_html, plot, last_update_html])
-        gpu_dropdown.change(wrapped_update_filters, inputs=[model_dropdown, engine_dropdown, benchmark_dropdown, gpu_dropdown, precision_dropdown, subrun_ids_textbox, argnv_pairs_textbox, show_details_checkbox, show_verified_sources_checkbox, show_all_precision_checkbox, show_custom_benchmarks_checkbox], outputs=[leaderboard_html, plot, last_update_html])
-        precision_dropdown.change(wrapped_update_filters, inputs=[model_dropdown, engine_dropdown, benchmark_dropdown, gpu_dropdown, precision_dropdown, subrun_ids_textbox, argnv_pairs_textbox, show_details_checkbox, show_verified_sources_checkbox, show_all_precision_checkbox, show_custom_benchmarks_checkbox], outputs=[leaderboard_html, plot, last_update_html])
-        show_verified_sources_checkbox.change(wrapped_update_filters, inputs=[model_dropdown, engine_dropdown, benchmark_dropdown, gpu_dropdown, precision_dropdown, subrun_ids_textbox, argnv_pairs_textbox, show_details_checkbox, show_verified_sources_checkbox, show_all_precision_checkbox, show_custom_benchmarks_checkbox], outputs=[leaderboard_html, plot, last_update_html])
-        show_custom_benchmarks_checkbox.change(wrapped_update_filters, inputs=[model_dropdown, engine_dropdown, benchmark_dropdown, gpu_dropdown, precision_dropdown, subrun_ids_textbox, argnv_pairs_textbox, show_details_checkbox, show_verified_sources_checkbox, show_all_precision_checkbox, show_custom_benchmarks_checkbox], outputs=[leaderboard_html, plot, last_update_html])
+        model_dropdown.change(wrapped_update_filters, inputs=[model_dropdown, engine_dropdown, benchmark_dropdown, gpu_dropdown, precision_dropdown, subrun_ids_textbox, argnv_pairs_textbox, show_details_checkbox, show_verified_sources_checkbox, show_all_precision_checkbox, show_custom_benchmarks_checkbox], outputs=[leaderboard_html, plot, custom_plot, last_update_html])
+        engine_dropdown.change(wrapped_update_filters, inputs=[model_dropdown, engine_dropdown, benchmark_dropdown, gpu_dropdown, precision_dropdown, subrun_ids_textbox, argnv_pairs_textbox, show_details_checkbox, show_verified_sources_checkbox, show_all_precision_checkbox, show_custom_benchmarks_checkbox], outputs=[leaderboard_html, plot, custom_plot, last_update_html])
+        benchmark_dropdown.change(wrapped_update_filters, inputs=[model_dropdown, engine_dropdown, benchmark_dropdown, gpu_dropdown, precision_dropdown, subrun_ids_textbox, argnv_pairs_textbox, show_details_checkbox, show_verified_sources_checkbox, show_all_precision_checkbox, show_custom_benchmarks_checkbox], outputs=[leaderboard_html, plot, custom_plot, last_update_html])
+        gpu_dropdown.change(wrapped_update_filters, inputs=[model_dropdown, engine_dropdown, benchmark_dropdown, gpu_dropdown, precision_dropdown, subrun_ids_textbox, argnv_pairs_textbox, show_details_checkbox, show_verified_sources_checkbox, show_all_precision_checkbox, show_custom_benchmarks_checkbox], outputs=[leaderboard_html, plot, custom_plot, last_update_html])
+        precision_dropdown.change(wrapped_update_filters, inputs=[model_dropdown, engine_dropdown, benchmark_dropdown, gpu_dropdown, precision_dropdown, subrun_ids_textbox, argnv_pairs_textbox, show_details_checkbox, show_verified_sources_checkbox, show_all_precision_checkbox, show_custom_benchmarks_checkbox], outputs=[leaderboard_html, plot, custom_plot, last_update_html])
+        show_verified_sources_checkbox.change(wrapped_update_filters, inputs=[model_dropdown, engine_dropdown, benchmark_dropdown, gpu_dropdown, precision_dropdown, subrun_ids_textbox, argnv_pairs_textbox, show_details_checkbox, show_verified_sources_checkbox, show_all_precision_checkbox, show_custom_benchmarks_checkbox], outputs=[leaderboard_html, plot, custom_plot, last_update_html])
+        show_custom_benchmarks_checkbox.change(wrapped_update_filters, inputs=[model_dropdown, engine_dropdown, benchmark_dropdown, gpu_dropdown, precision_dropdown, subrun_ids_textbox, argnv_pairs_textbox, show_details_checkbox, show_verified_sources_checkbox, show_all_precision_checkbox, show_custom_benchmarks_checkbox], outputs=[leaderboard_html, plot, custom_plot, last_update_html])
         
         # Connect single search button to the advanced filter handler
         search_button.click(
             apply_advanced_filters, 
             inputs=[model_dropdown, engine_dropdown, benchmark_dropdown, gpu_dropdown, precision_dropdown, subrun_ids_textbox, argnv_pairs_textbox, show_details_checkbox, show_verified_sources_checkbox, show_all_precision_checkbox, show_custom_benchmarks_checkbox], 
-            outputs=[leaderboard_html, plot, last_update_html]
+            outputs=[leaderboard_html, plot, custom_plot, last_update_html]
+        )
+        
+        # Connect metric dropdowns to update handler
+        x_metric_dropdown.change(
+            update_custom_plot,
+            inputs=[x_metric_dropdown, y_metric_dropdown, model_dropdown, engine_dropdown, benchmark_dropdown, gpu_dropdown, precision_dropdown, subrun_ids_textbox, argnv_pairs_textbox, show_details_checkbox, show_verified_sources_checkbox, show_all_precision_checkbox, show_custom_benchmarks_checkbox],
+            outputs=[custom_plot, custom_plot_message]
+        )
+        
+        y_metric_dropdown.change(
+            update_custom_plot,
+            inputs=[x_metric_dropdown, y_metric_dropdown, model_dropdown, engine_dropdown, benchmark_dropdown, gpu_dropdown, precision_dropdown, subrun_ids_textbox, argnv_pairs_textbox, show_details_checkbox, show_verified_sources_checkbox, show_all_precision_checkbox, show_custom_benchmarks_checkbox],
+            outputs=[custom_plot, custom_plot_message]
         )
        
     return interface
