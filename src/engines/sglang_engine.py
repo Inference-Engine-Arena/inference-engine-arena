@@ -37,6 +37,9 @@ class SGLangEngine(BaseEngine):
         self.gpu_devices = os.environ.get("CUDA_VISIBLE_DEVICES")
         self.startup_timeout = self.DEFAULT_STARTUP_TIMEOUT
         
+        # Use HF_HOME environment variable (if exists) or default path as cache mount path
+        self.hf_cache_dir = os.environ.get("HF_HOME", f"{os.path.expanduser('~')}/.cache/huggingface")
+        
         # Store engine arguments separately from other config
         self.engine_args = {}
         self.env_vars = {}
@@ -93,7 +96,7 @@ class SGLangEngine(BaseEngine):
             
         # Continue with the rest of the docker command
         docker_cmd.extend([
-            "-v", f"{os.path.expanduser('~')}/.cache/huggingface:/root/.cache/huggingface",
+            "-v", f"{self.hf_cache_dir}:/root/.cache/huggingface",
             "-p", f"{self.port}:{self.port}",
             "--ipc=host",
         ])  
@@ -317,7 +320,7 @@ class SGLangEngine(BaseEngine):
         Returns:
             Optional[str]: The determined dtype or None if unable to determine
         """
-        config_json = get_model_config_json(self.container_id, self.model)
+        config_json = get_model_config_json(self.container_id, self.model, self.hf_cache_dir)
         if config_json and "torch_dtype" in config_json:
             # If torch_dtype exists in config.json, use that value
             torch_dtype = config_json["torch_dtype"]

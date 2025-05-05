@@ -38,6 +38,9 @@ class VLLMEngine(BaseEngine):
         self.gpu_devices = os.environ.get("CUDA_VISIBLE_DEVICES") 
         self.startup_timeout = self.DEFAULT_STARTUP_TIMEOUT
         
+        # Use HF_HOME environment variable (if exists) or default path as cache mount path
+        self.hf_cache_dir = os.environ.get("HF_HOME", f"{os.path.expanduser('~')}/.cache/huggingface")
+        
         # Store engine arguments separately from other config
         self.engine_args = {}
         self.env_vars = {}
@@ -93,8 +96,9 @@ class VLLMEngine(BaseEngine):
             docker_cmd.extend(["--gpus", "all"])
             
         # Continue with the rest of the docker command
+        # Use the HF cache directory path set during initialization
         docker_cmd.extend([
-            "-v", f"{os.path.expanduser('~')}/.cache/huggingface:/root/.cache/huggingface",
+            "-v", f"{self.hf_cache_dir}:/root/.cache/huggingface",
             "-p", f"{self.port}:{self.port}",
             "--ipc=host",
         ])
