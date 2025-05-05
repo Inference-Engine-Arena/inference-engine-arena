@@ -84,7 +84,7 @@ img {
 .leaderboard-container {
     margin-top: 1rem;
     overflow-x: auto;
-    max-height: 1200px;  
+    max-height: 900px;  
     overflow-y: auto;  
     border: 1px solid #eee;  
 }
