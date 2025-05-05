@@ -84,13 +84,14 @@ img {
 .leaderboard-container {
     margin-top: 1rem;
     overflow-x: auto;
+    max-height: 1200px;  
+    overflow-y: auto;  
+    border: 1px solid #eee;  
 }
 .plot-container {
     margin-top: 2rem;
     margin-bottom: 2rem;
     background-color: #000;
-    padding: 20px;
-    border-radius: 8px;
 }
 .plot-title {
     color: white;
@@ -109,11 +110,12 @@ img {
     color: #aaa;
     text-align: center;
     font-size: 0.9rem;
-    margin-top: 0.5rem;
+    # margin-top: 0.5rem;
 }
 table {
     width: 100%;
     border-collapse: collapse;
+    min-width: 1200px;
 }
 th {
     background-color: #f1f1f1;
@@ -121,6 +123,9 @@ th {
     text-align: left;
     border-bottom: 1px solid #ddd;
     font-weight: 600;
+    position: sticky; 
+    top: 0; 
+    z-index: 10; 
 }
 td {
     padding: 8px;
@@ -191,6 +196,65 @@ tr:hover {
 }
 .search-button:hover {
     background-color: #0069d9;
+}
+
+/* Top 5 Chart Container Styles */
+#top5-chart-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 100%;
+    margin: 0 auto;
+    padding: 20px;
+    background-color: rgba(248, 249, 250, 0.5);
+    border-radius: 8px;
+    overflow: hidden !important;
+    position: relative;
+    box-sizing: border-box;
+    border: 1px solid #e9ecef;
+}
+
+#top5-chart-container, #top5-chart-container > * {
+    background-color: rgba(248, 249, 250, 0.5) !important;
+    border: 1px solid #e9ecef !important;
+}
+
+#top5-plot {
+    width: 100% !important;
+    margin: 0 auto;
+    transition: all 0.3s ease;
+    overflow: hidden !important;
+    background-color: #F8F9FA;
+}
+
+#top5-plot .svg-container {
+    width: 100% !important;
+    overflow: hidden !important;
+}
+
+/* Ensure chart content doesn't overflow container */
+.js-plotly-plot .plotly {
+    overflow: hidden !important;
+}
+
+/* Beautify scrollbar styles */
+.leaderboard-container::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+}
+
+.leaderboard-container::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 4px;
+}
+
+.leaderboard-container::-webkit-scrollbar-thumb {
+    background: #888;
+    border-radius: 4px;
+}
+
+.leaderboard-container::-webkit-scrollbar-thumb:hover {
+    background: #555;
 }
 """
 
@@ -1181,6 +1245,326 @@ def create_custom_scatter_plot(state, x_metric, y_metric):
         logger.error(traceback.format_exc())
         return None
 
+def create_top5_bar_chart(state, primary_metric, secondary_metric=None):
+    """Create a vertical bar chart showing top 5 performers for the selected metric with optional secondary metric"""
+    try:
+        # Use shared data processing
+        df = process_leaderboard_data(state)
+        
+        if df is None or df.empty:
+            logger.warning("No data available for plotting")
+            return None
+        
+        # Map friendly names to actual column names and sort direction
+        metric_mapping = {
+            "Input Throughput (tokens/s)": ("input_throughput", True),
+            "Input $/1M tokens": ("input_cost_per_million", False),
+            "Output Throughput (tokens/s)": ("output_throughput", True),
+            "Output $/1M tokens": ("output_cost_per_million", False),
+            "TTFT (ms)": ("mean_ttft_ms", False),
+            "TPOT (ms)": ("mean_tpot_ms", False),
+            "Per Request Throughput (t/s/req)": ("per_request_throughput", True)
+        }
+        
+        primary_column, primary_higher_is_better = metric_mapping.get(primary_metric, ("input_throughput", True))
+        
+        # Ensure the specified column exists and has valid values
+        if primary_column not in df.columns:
+            logger.warning(f"Column {primary_column} does not exist in the data")
+            return None
+        
+        # Only keep rows with valid data for this metric
+        df = df[df[primary_column].notna() & (df[primary_column] > 0)]
+        
+        if df.empty:
+            logger.warning("No valid data points after filtering")
+            return None
+            
+        # Sort by the primary metric and select top 5
+        if primary_higher_is_better:
+            df_sorted = df.sort_values(by=primary_column, ascending=False).head(5)
+        else:
+            df_sorted = df.sort_values(by=primary_column, ascending=True).head(5)
+        
+        # Create simplified labels
+        df_sorted['short_label'] = df_sorted.apply(
+            lambda row: f"{row['model']}", 
+            axis=1
+        )
+        
+        # Create compact Engine Args string
+        df_sorted['engine_args_str'] = df_sorted.apply(
+            lambda row: get_short_args_string(row.get('engine_args', {})),
+            axis=1
+        )
+        
+        # Create compact Env Vars string
+        df_sorted['env_vars_str'] = df_sorted.apply(
+            lambda row: get_short_args_string(row.get('env_vars', {})),
+            axis=1
+        )
+        
+        # Create hover text with enhanced information including benchmark config
+        df_sorted['hover_text'] = df_sorted.apply(
+            lambda row: create_enhanced_hover_text(row, primary_metric, secondary_metric),
+            axis=1
+        )
+        
+        # Now directly create a Plotly figure instead of using matplotlib
+        fig = go.Figure()
+        
+        # Set up the layout first with light theme
+        fig.update_layout(
+            title=dict(
+                text=f"Top 5 Performance Ranking: {primary_metric}",
+                font=dict(size=20, color="#333333", weight="bold"),
+                x=0.5  
+            ),
+            paper_bgcolor='#F8F9FA',
+            plot_bgcolor='#F8F9FA',
+            margin=dict(l=0, r=0, t=0, b=0),  
+            height=680, 
+            hovermode="closest",
+            hoverlabel=dict(
+                bgcolor="white",
+                font_size=12,
+                font_family="Arial"
+            )
+        )
+        
+        # Create multi-line x-axis labels (Rank, model, and subrun_id on separate lines)
+        model_labels = []
+        for i, (_, row) in enumerate(df_sorted.iterrows()):
+            model_name = row['model']
+            engine_name = row['engine']
+            subrun_id = row.get('id', 'N/A')
+            # Format subrun_id to show only the last 8 characters if it's too long
+            if len(subrun_id) > 8:
+                subrun_id = subrun_id[-8:]
+                
+            model_labels.append(f"Rank: {i+1}<br>{model_name}<br>Engine: {engine_name}<br>Subrun Short ID: {subrun_id}")
+
+        bar_width = 0.35 if secondary_metric else 0.7
+
+        if secondary_metric and secondary_metric in metric_mapping:
+            secondary_column, _ = metric_mapping.get(secondary_metric)
+            if secondary_column in df_sorted.columns and df_sorted[secondary_column].notna().all() and (df_sorted[secondary_column] > 0).all():
+
+                centered_tickvals = [i + bar_width/2 for i in range(len(df_sorted))]
+                x_range = [-0.45, len(df_sorted) - 0.2]
+                fig.update_xaxes(
+                    title=None,
+                    ticktext=model_labels,
+                    tickvals=centered_tickvals,  
+                    tickangle=0,
+                    showgrid=False,
+                    range=x_range
+                )
+            else:
+                # If only one bar series is shown (just the primary metric)
+                fig.update_xaxes(
+                    title=None,
+                    ticktext=model_labels,
+                    tickvals=list(range(len(df_sorted))),
+                    tickangle=0,
+                    showgrid=False,
+                    range=x_range
+                )
+        else:
+            # If only one bar series is shown (just the primary metric)
+            fig.update_xaxes(
+                title=None,
+                ticktext=model_labels,
+                tickvals=list(range(len(df_sorted))),
+                tickangle=0,
+                showgrid=False,
+                range=x_range
+            )
+                
+        fig.update_yaxes(
+            title=dict(
+                text=primary_metric,
+                font=dict(
+                    size=12,
+                    color="#1F77B4",
+                    family="Arial",
+                    weight="bold"
+                )
+            ),
+            showgrid=True,
+            gridcolor='rgba(200,200,200,0.2)',
+            zeroline=True,
+            zerolinewidth=1,
+            zerolinecolor='rgba(0,0,0,0.2)'
+        )
+
+        bar_colors = f'rgb(31, 119, 180)'
+        offset = -bar_width/2 if secondary_metric else 0
+        
+        # Add the primary metric bars
+        fig.add_trace(go.Bar(
+            x=list(range(len(df_sorted))),
+            y=df_sorted[primary_column],
+            text=df_sorted[primary_column].round(1),
+            textposition='outside',
+            hoverinfo='text',
+            hovertext=df_sorted['hover_text'],
+            marker_color=bar_colors,
+            marker_line_color='white',
+            marker_line_width=1.5,
+            width=bar_width,
+            name=primary_metric,
+            offset=offset
+        ))
+        
+        # If we have a secondary metric, add it as a second bar
+        if secondary_metric and secondary_metric in metric_mapping:
+            secondary_column, _ = metric_mapping.get(secondary_metric)
+            
+            if secondary_column in df_sorted.columns and df_sorted[secondary_column].notna().all() and (df_sorted[secondary_column] > 0).all():
+
+                secondary_max = df_sorted[secondary_column].max() * 1.1
+                primary_max = df_sorted[primary_column].max() * 1.1
+                fig.update_yaxes(range=[0, primary_max])
+                
+                # Add a second y-axis with proper range to ensure alignment
+                fig.update_layout(
+                    title=dict(
+                        text=f"Top 5 Performance Ranking: {primary_metric}",
+                        font=dict(size=20, color="#333333", weight="bold"),
+                        x=0.5
+                    ),
+                    yaxis2=dict(
+                        title=dict(
+                            text=secondary_metric,
+                            font=dict(
+                                size=12,
+                                color="#FF7F0E",
+                                family="Arial",
+                                weight="bold"
+                            )
+                        ),
+                        tickfont=dict(color="#FF7F0E"),
+                        overlaying="y",
+                        side="right",
+                        range=[0, secondary_max],  
+                        showgrid=False,
+                        zeroline=True,
+                        zerolinewidth=1,
+                        zerolinecolor='rgba(0,0,0,0.2)'
+                    )
+                )
+                
+                # Add secondary metric as bar
+                fig.add_trace(go.Bar(
+                    x=list(range(len(df_sorted))),
+                    y=df_sorted[secondary_column],
+                    text=df_sorted[secondary_column].round(1),
+                    textposition='outside',
+                    hoverinfo='text',
+                    hovertext=df_sorted['hover_text'],
+                    marker_color='#FF7F0E',
+                    marker_line_color='white',
+                    marker_line_width=1.5,
+                    width=bar_width,
+                    name=secondary_metric,
+                    offset=bar_width/2,
+                    yaxis="y2",
+                    base=0  
+                ))
+        
+        # Add filter information to the plot
+        filter_text = []
+        if state.model_filter and state.model_filter != "All Models":
+            filter_text.append(f"Model: {state.model_filter}")
+        if state.engine_filter and state.engine_filter != "All Engines":
+            filter_text.append(f"Engine: {state.engine_filter}")
+        if state.gpu_filter and state.gpu_filter != "All GPUs":
+            filter_text.append(f"GPU: {state.gpu_filter}")
+        if state.benchmark_filter and state.benchmark_filter != "All Benchmarks":
+            filter_text.append(f"Benchmark: {state.benchmark_filter}")
+        
+        if filter_text:
+            subtitle = " | ".join(filter_text)
+            fig.add_annotation(
+                text=subtitle,
+                x=0.5,
+                y=1.05,
+                xref="paper",
+                yref="paper",
+                showarrow=False,
+                font=dict(size=10, color="#666666", style="italic"),
+                bgcolor="#F4F4F4",
+                borderpad=4,
+                bordercolor="#DDDDDD",
+                borderwidth=1
+            )
+        
+        # Set legend at the bottom
+        fig.update_layout(
+            legend=dict(
+                orientation="h",
+                yanchor="top",
+                y=-0.15,
+                xanchor="center",
+                x=0.5,
+                bgcolor="rgba(255,255,255,0.9)",
+                bordercolor="#DDDDDD",
+                borderwidth=1
+            ),
+            bargap=0.15,
+            bargroupgap=0.1
+        )
+        
+        logger.info("Successfully created enhanced Top 5 ranking chart with improved hover and alignment")
+        return fig
+        
+    except Exception as e:
+        logger.exception(f"Error creating Top 5 chart: {str(e)}")
+        import traceback
+        logger.error(traceback.format_exc())
+        return None
+
+# Helper function: Create enhanced hover text with benchmark config details
+def create_enhanced_hover_text(row, primary_metric, secondary_metric=None):
+
+    hover_text = f"<b>Subrun ID:</b> {row.get('id', 'N/A')}<br><br>"
+
+    hover_text += f"<b>Model:</b> {row.get('model', 'Unknown')}<br>"
+    hover_text += f"<b>Engine:</b> {row.get('engine', 'Unknown')}<br>"
+    hover_text += f"<b>Precision:</b> {row.get('precision', 'Unknown')}<br>"
+    
+    # Add hardware section 
+    hover_text += "<br><b>Hardware:</b><br>"
+    hover_text += f"{row.get('gpu', 'Unknown')}<br>"
+
+    # If there are engine arguments, add these
+    engine_args = row.get('engine_args', {})
+    if engine_args and isinstance(engine_args, dict):
+        hover_text += "<br><b>Engine Parameters:</b><br>"
+        for key, value in engine_args.items():
+            hover_text += f"{key}: {value}<br>"
+
+    # If there are env arguments, add these
+    env_vars = row.get('env_vars', {})
+    if env_vars and isinstance(env_vars, dict):
+        hover_text += "<br><b>Env Parameters:</b><br>"
+        for key, value in env_vars.items():
+            hover_text += f"{key}: {value}<br>"
+    
+    # Add benchmark config section with detailed information 
+    benchmark_config = row.get('benchmark_config', {})
+    hover_text += "<br><b>Benchmark Configuration:</b><br>"
+    hover_text += f"Benchmark Type: {row.get('benchmark_type', 'Unknown')}<br>"
+    
+    if benchmark_config and isinstance(benchmark_config, dict):
+        # Show up to 10 important parameters from benchmark config
+        items_shown = 0
+        for key, value in benchmark_config.items():
+            hover_text += f"{key}: {value}<br>"
+            items_shown += 1
+    return hover_text
+
 def create_interface():
     """Create the Gradio interface"""
     state = LeaderboardState()
@@ -1261,6 +1645,13 @@ def create_interface():
             
             custom_plot = gr.Plot(value=create_custom_scatter_plot(state, state.x_metric, state.y_metric))
             custom_plot_message = gr.HTML(f"<div style='text-align: center; font-size: 0.9rem; margin-top: 10px; color: #888;'>X-axis: {state.x_metric} | Y-axis: {state.y_metric}</div>")
+        
+        # Top 5
+        with gr.Column(visible=True):
+            gr.HTML("<h2 style='text-align: center; margin-top: 20px;'>Top 5 Performance Ranking</h2>")
+            
+            top5_plot = gr.Plot(value=create_top5_bar_chart(state, state.x_metric, state.y_metric), elem_id="top5-plot")
+            
             
         # Leaderboard display
         leaderboard_html = gr.HTML(render_leaderboard(state))
@@ -1271,6 +1662,7 @@ def create_interface():
             # Try to create plots
             plot_fig = create_performance_scatter_plot(state)
             custom_plot_fig = create_custom_scatter_plot(state, state.x_metric, state.y_metric)
+            top5_plot_fig = create_top5_bar_chart(state, state.x_metric, state.y_metric)
             
             # Update all dropdowns with refreshed data
             return {
@@ -1281,6 +1673,7 @@ def create_interface():
                 leaderboard_html: render_leaderboard(state),
                 plot: plot_fig,
                 custom_plot: custom_plot_fig,
+                top5_plot: top5_plot_fig,
                 last_update_html: f"<div class='timer'>Last update: <span id='last-update'>{state.get_formatted_update_time()}</span></div>"
             }
         
@@ -1291,12 +1684,14 @@ def create_interface():
             # Try to create plots
             plot_fig = create_performance_scatter_plot(state)
             custom_plot_fig = create_custom_scatter_plot(state, state.x_metric, state.y_metric)
+            top5_plot_fig = create_top5_bar_chart(state, state.x_metric, state.y_metric)
             
             return {
                 precision_dropdown: gr.Dropdown(visible=show_all_precision),
                 leaderboard_html: render_leaderboard(state),
                 plot: plot_fig,
                 custom_plot: custom_plot_fig,
+                top5_plot: top5_plot_fig,
                 last_update_html: f"<div class='timer'>Last update: <span id='last-update'>{state.get_formatted_update_time()}</span></div>"
             }
         
@@ -1310,6 +1705,7 @@ def create_interface():
             # Try to create plots
             plot_fig = create_performance_scatter_plot(state)
             custom_plot_fig = create_custom_scatter_plot(state, state.x_metric, state.y_metric)
+            top5_plot_fig = create_top5_bar_chart(state, state.x_metric, state.y_metric)
             
             return {
                 advanced_filters_container: gr.Column(visible=show_details),
@@ -1318,6 +1714,7 @@ def create_interface():
                 leaderboard_html: render_leaderboard(state),
                 plot: plot_fig,
                 custom_plot: custom_plot_fig,
+                top5_plot: top5_plot_fig,
                 last_update_html: f"<div class='timer'>Last update: <span id='last-update'>{state.get_formatted_update_time()}</span></div>"
             }
         
@@ -1347,12 +1744,15 @@ def create_interface():
             # Try to create plots
             plot_fig = create_performance_scatter_plot(state)
             custom_plot_fig = create_custom_scatter_plot(state, state.x_metric, state.y_metric)
+
+            top5_plot_fig = create_top5_bar_chart(state, state.x_metric, state.y_metric)
             
             # Return updated leaderboard and timestamp
             return {
                 leaderboard_html: render_leaderboard(state),
                 plot: plot_fig,
                 custom_plot: custom_plot_fig,
+                top5_plot: top5_plot_fig,
                 last_update_html: f"<div class='timer'>Last update: <span id='last-update'>{state.get_formatted_update_time()}</span></div>"
             }
         
@@ -1377,9 +1777,16 @@ def create_interface():
             # Create new custom plot with updated metrics
             custom_plot_fig = create_custom_scatter_plot(state, x_metric, y_metric)
             
+            # Update Top 5 chart with the same X-axis metric as primary and Y-axis metric as secondary
+            top5_plot_fig = create_top5_bar_chart(state, x_metric, y_metric)
+            
+            # Update Top 5 message text in English
+            message_text = f"<div style='text-align: center; font-size: 0.9rem; margin-top: 15px; color: #666;'>Currently showing: <b>{x_metric}</b> as primary metric, <b>{y_metric}</b> as secondary metric</div>"
+            
             return {
                 custom_plot: custom_plot_fig,
-                custom_plot_message: f"<div style='text-align: center; font-size: 0.9rem; margin-top: 10px; color: #888;'>X-axis: {x_metric} | Y-axis: {y_metric}</div>"
+                custom_plot_message: f"<div style='text-align: center; font-size: 0.9rem; margin-top: 10px; color: #888;'>X-axis: {x_metric} | Y-axis: {y_metric}</div>",
+                top5_plot: top5_plot_fig
             }
         
         def apply_advanced_filters(model, engine, benchmark, gpu, precision, subrun_ids, argnv_pairs, show_details, show_verified_sources, show_all_precision, show_custom_benchmarks):
@@ -1388,51 +1795,51 @@ def create_interface():
         
         # Connect UI elements to event handlers
         # Don't need to connect the source_btn anymore since it has a direct link
-        refresh_btn.click(wrapped_refresh_data, inputs=[], outputs=[model_dropdown, engine_dropdown, benchmark_dropdown, gpu_dropdown, leaderboard_html, plot, custom_plot, last_update_html])
+        refresh_btn.click(wrapped_refresh_data, inputs=[], outputs=[model_dropdown, engine_dropdown, benchmark_dropdown, gpu_dropdown, leaderboard_html, plot, custom_plot, top5_plot, last_update_html])
         
         # Special handler for show details checkbox to toggle advanced filters visibility
         show_details_checkbox.change(
             toggle_advanced_filters,
             inputs=[show_details_checkbox],
-            outputs=[advanced_filters_container, subrun_ids_textbox, argnv_pairs_textbox, leaderboard_html, plot, custom_plot, last_update_html]
+            outputs=[advanced_filters_container, subrun_ids_textbox, argnv_pairs_textbox, leaderboard_html, plot, custom_plot, top5_plot, last_update_html]
         )
         
         # Special handler for precision checkbox to toggle precision dropdown visibility
         show_all_precision_checkbox.change(
             toggle_precision_dropdown, 
             inputs=[show_all_precision_checkbox], 
-            outputs=[precision_dropdown, leaderboard_html, plot, custom_plot, last_update_html]
+            outputs=[precision_dropdown, leaderboard_html, plot, custom_plot, top5_plot, last_update_html]
         )
         
         # Connect standard filters to update handler
-        model_dropdown.change(wrapped_update_filters, inputs=[model_dropdown, engine_dropdown, benchmark_dropdown, gpu_dropdown, precision_dropdown, subrun_ids_textbox, argnv_pairs_textbox, show_details_checkbox, show_verified_sources_checkbox, show_all_precision_checkbox, show_custom_benchmarks_checkbox], outputs=[leaderboard_html, plot, custom_plot, last_update_html])
-        engine_dropdown.change(wrapped_update_filters, inputs=[model_dropdown, engine_dropdown, benchmark_dropdown, gpu_dropdown, precision_dropdown, subrun_ids_textbox, argnv_pairs_textbox, show_details_checkbox, show_verified_sources_checkbox, show_all_precision_checkbox, show_custom_benchmarks_checkbox], outputs=[leaderboard_html, plot, custom_plot, last_update_html])
-        benchmark_dropdown.change(wrapped_update_filters, inputs=[model_dropdown, engine_dropdown, benchmark_dropdown, gpu_dropdown, precision_dropdown, subrun_ids_textbox, argnv_pairs_textbox, show_details_checkbox, show_verified_sources_checkbox, show_all_precision_checkbox, show_custom_benchmarks_checkbox], outputs=[leaderboard_html, plot, custom_plot, last_update_html])
-        gpu_dropdown.change(wrapped_update_filters, inputs=[model_dropdown, engine_dropdown, benchmark_dropdown, gpu_dropdown, precision_dropdown, subrun_ids_textbox, argnv_pairs_textbox, show_details_checkbox, show_verified_sources_checkbox, show_all_precision_checkbox, show_custom_benchmarks_checkbox], outputs=[leaderboard_html, plot, custom_plot, last_update_html])
-        precision_dropdown.change(wrapped_update_filters, inputs=[model_dropdown, engine_dropdown, benchmark_dropdown, gpu_dropdown, precision_dropdown, subrun_ids_textbox, argnv_pairs_textbox, show_details_checkbox, show_verified_sources_checkbox, show_all_precision_checkbox, show_custom_benchmarks_checkbox], outputs=[leaderboard_html, plot, custom_plot, last_update_html])
-        show_verified_sources_checkbox.change(wrapped_update_filters, inputs=[model_dropdown, engine_dropdown, benchmark_dropdown, gpu_dropdown, precision_dropdown, subrun_ids_textbox, argnv_pairs_textbox, show_details_checkbox, show_verified_sources_checkbox, show_all_precision_checkbox, show_custom_benchmarks_checkbox], outputs=[leaderboard_html, plot, custom_plot, last_update_html])
-        show_custom_benchmarks_checkbox.change(wrapped_update_filters, inputs=[model_dropdown, engine_dropdown, benchmark_dropdown, gpu_dropdown, precision_dropdown, subrun_ids_textbox, argnv_pairs_textbox, show_details_checkbox, show_verified_sources_checkbox, show_all_precision_checkbox, show_custom_benchmarks_checkbox], outputs=[leaderboard_html, plot, custom_plot, last_update_html])
+        model_dropdown.change(wrapped_update_filters, inputs=[model_dropdown, engine_dropdown, benchmark_dropdown, gpu_dropdown, precision_dropdown, subrun_ids_textbox, argnv_pairs_textbox, show_details_checkbox, show_verified_sources_checkbox, show_all_precision_checkbox, show_custom_benchmarks_checkbox], outputs=[leaderboard_html, plot, custom_plot, top5_plot, last_update_html])
+        engine_dropdown.change(wrapped_update_filters, inputs=[model_dropdown, engine_dropdown, benchmark_dropdown, gpu_dropdown, precision_dropdown, subrun_ids_textbox, argnv_pairs_textbox, show_details_checkbox, show_verified_sources_checkbox, show_all_precision_checkbox, show_custom_benchmarks_checkbox], outputs=[leaderboard_html, plot, custom_plot, top5_plot, last_update_html])
+        benchmark_dropdown.change(wrapped_update_filters, inputs=[model_dropdown, engine_dropdown, benchmark_dropdown, gpu_dropdown, precision_dropdown, subrun_ids_textbox, argnv_pairs_textbox, show_details_checkbox, show_verified_sources_checkbox, show_all_precision_checkbox, show_custom_benchmarks_checkbox], outputs=[leaderboard_html, plot, custom_plot, top5_plot, last_update_html])
+        gpu_dropdown.change(wrapped_update_filters, inputs=[model_dropdown, engine_dropdown, benchmark_dropdown, gpu_dropdown, precision_dropdown, subrun_ids_textbox, argnv_pairs_textbox, show_details_checkbox, show_verified_sources_checkbox, show_all_precision_checkbox, show_custom_benchmarks_checkbox], outputs=[leaderboard_html, plot, custom_plot, top5_plot, last_update_html])
+        precision_dropdown.change(wrapped_update_filters, inputs=[model_dropdown, engine_dropdown, benchmark_dropdown, gpu_dropdown, precision_dropdown, subrun_ids_textbox, argnv_pairs_textbox, show_details_checkbox, show_verified_sources_checkbox, show_all_precision_checkbox, show_custom_benchmarks_checkbox], outputs=[leaderboard_html, plot, custom_plot, top5_plot, last_update_html])
+        show_verified_sources_checkbox.change(wrapped_update_filters, inputs=[model_dropdown, engine_dropdown, benchmark_dropdown, gpu_dropdown, precision_dropdown, subrun_ids_textbox, argnv_pairs_textbox, show_details_checkbox, show_verified_sources_checkbox, show_all_precision_checkbox, show_custom_benchmarks_checkbox], outputs=[leaderboard_html, plot, custom_plot, top5_plot, last_update_html])
+        show_custom_benchmarks_checkbox.change(wrapped_update_filters, inputs=[model_dropdown, engine_dropdown, benchmark_dropdown, gpu_dropdown, precision_dropdown, subrun_ids_textbox, argnv_pairs_textbox, show_details_checkbox, show_verified_sources_checkbox, show_all_precision_checkbox, show_custom_benchmarks_checkbox], outputs=[leaderboard_html, plot, custom_plot, top5_plot, last_update_html])
         
         # Connect single search button to the advanced filter handler
         search_button.click(
             apply_advanced_filters, 
             inputs=[model_dropdown, engine_dropdown, benchmark_dropdown, gpu_dropdown, precision_dropdown, subrun_ids_textbox, argnv_pairs_textbox, show_details_checkbox, show_verified_sources_checkbox, show_all_precision_checkbox, show_custom_benchmarks_checkbox], 
-            outputs=[leaderboard_html, plot, custom_plot, last_update_html]
+            outputs=[leaderboard_html, plot, custom_plot, top5_plot, last_update_html]
         )
         
         # Connect metric dropdowns to update handler
         x_metric_dropdown.change(
             update_custom_plot,
             inputs=[x_metric_dropdown, y_metric_dropdown, model_dropdown, engine_dropdown, benchmark_dropdown, gpu_dropdown, precision_dropdown, subrun_ids_textbox, argnv_pairs_textbox, show_details_checkbox, show_verified_sources_checkbox, show_all_precision_checkbox, show_custom_benchmarks_checkbox],
-            outputs=[custom_plot, custom_plot_message]
+            outputs=[custom_plot, custom_plot_message, top5_plot]
         )
         
         y_metric_dropdown.change(
             update_custom_plot,
             inputs=[x_metric_dropdown, y_metric_dropdown, model_dropdown, engine_dropdown, benchmark_dropdown, gpu_dropdown, precision_dropdown, subrun_ids_textbox, argnv_pairs_textbox, show_details_checkbox, show_verified_sources_checkbox, show_all_precision_checkbox, show_custom_benchmarks_checkbox],
-            outputs=[custom_plot, custom_plot_message]
+            outputs=[custom_plot, custom_plot_message, top5_plot]
         )
-       
+        
     return interface
 
 def find_available_port(start_port, end_port):
@@ -1442,6 +1849,38 @@ def find_available_port(start_port, end_port):
             if s.connect_ex(('localhost', port)) != 0:
                 return port
     raise RuntimeError(f"No available ports in range {start_port}-{end_port}")
+
+# Helper function: Create simplified parameter string from args dict
+def get_short_args_string(args_dict, max_length=30):
+    if not args_dict:
+        return ""
+    
+    # Select the most important parameters
+    important_keys = []
+    for key in args_dict.keys():
+        if key in ['precision', 'engine_type', 'num_gpus', 'quantize', 'max-num-seqs', 'request_rate', 'batch_size']:
+            important_keys.append(key)
+    
+    # If no important parameters found, select the first 2
+    if not important_keys and len(args_dict) > 0:
+        important_keys = list(args_dict.keys())[:2]
+    
+    result = []
+    for key in important_keys:
+        value = args_dict.get(key)
+        if isinstance(value, bool):
+            if value:
+                result.append(f"{key}")
+        else:
+            result.append(f"{key}={value}")
+    
+    result_str = ", ".join(result)
+    
+    # If string is too long, truncate and add ...
+    if len(result_str) > max_length:
+        return result_str[:max_length-3] + "..."
+    
+    return result_str
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Inference Engine Arena Leaderboard")
