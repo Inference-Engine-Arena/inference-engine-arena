@@ -258,6 +258,45 @@ tr:hover {
 }
 """
 
+# Dictionary of metric definitions for reuse across the application
+METRIC_DEFINITIONS = {
+    "Input Throughput (tokens/s)": '''This measures how many input tokens the system can process per second. It represents the rate at which the model can ingest and process incoming text from users.''',
+    
+    "Input $/1M tokens": '''
+This is the cost to process 1 million input tokens (the text sent to the model). This pricing metric helps users estimate costs for processing their prompts or input data.
+Example calculation:
+
+System cost: $2/hour
+Input processing speed: 800 tokens/s
+Cost per second: $2/hr ÷ 3600s/hr = $0.000556/s
+Tokens processed per second: 800
+Cost per token: $0.000556/s ÷ 800 tokens/s = $0.000000695/token
+Cost per million tokens: $0.000000695 × 1,000,000 = $0.695/1M tokens
+''',
+    
+    "Output Throughput (tokens/s)": '''Total TPS per system represents the total output tokens per seconds throughput, accounting for all the requests happening simultaneously. As the number of requests increases, the total TPS per system increases, until it reaches a saturation point for all the available GPU compute resources, beyond which it might decrease.''',
+    
+    "Output $/1M tokens": '''
+This is the cost to generate 1 million output tokens (the text produced by the model). Output tokens typically cost more than input tokens because generation is more computationally intensive than processing.
+Example calculation:
+
+System cost: $2/hour
+Output generation speed: 400 tokens/s
+Cost per second: $2/hr ÷ 3600s/hr = $0.000556/s
+Tokens generated per second: 400
+Cost per token: $0.000556/s ÷ 400 tokens/s = $0.00000139/token
+Cost per million tokens: $0.00000139 × 1,000,000 = $1.39/1M tokens
+''',
+    
+    "TTFT (ms)": '''This metric shows how long a user needs to wait before seeing the model's output. This is the time it takes from submitting the query to receiving the first token (if the response is not empty).
+            Time to first token generally includes both request queuing time, prefill time and network latency. The longer the prompt, the larger the TTFT. This is because the attention mechanism requires the whole input sequence to compute and create the so-called key-value cache (aka.KV-cache), from which point the iterative generation loop can begin. Additionally, a production application can have several requests in progress, therefore one request's prefill phase may overlap with another request's generation phase.''',
+    
+    "TPOT (ms)": '''Time per output token (TPOT), This is defined as the average time between consecutive tokens and is also known as inter token latency (ITL).
+            It is important to note that with longer output sequences, the KV cache grows and hence the memory cost. The cost of attention computation also grows: for each new token, this cost is linear in the length of the input + output sequence so far (but this computation is generally not compute-bound). Consistent inter-token latencies signifies an efficient memory management, better memory bandwidth as well as efficient attention computation.''',
+    
+    "TPS for 1 User (tokens/s/req)": '''TPS per user represents throughput from a single user perspective, and defined as (Output sequence length)/(e2e_latency) for each user's request, which asymptotically approaches 1/ITL as the output sequence length increases. Note that as the number of concurrent requests increases in the system, the total TPS for the whole system increases, while TPS per user decreases as latency becomes worse.'''
+}
+
 class LeaderboardState:
     def __init__(self):
         self.source = os.environ.get("LEADERBOARD_SOURCE", "local")
@@ -439,7 +478,7 @@ class LeaderboardState:
             "Output $/1M tokens",
             "TTFT (ms)",
             "TPOT (ms)",
-            "Per Request Throughput (t/s/req)"
+            "TPS for 1 User (tokens/s/req)"
         ]
 
 def check_value_match(row_value, search_value):
@@ -610,7 +649,7 @@ def render_leaderboard(state):
     html += "<th>Output $/1M tokens</th>"
     html += "<th>TTFT (ms)</th>"
     html += "<th>TPOT (ms)</th>"
-    html += "<th>Per Request Throughput (t/s/req)</th>"
+    html += "<th>TPS for 1 User (tokens/s/req)</th>"
     html += "<th>Uploaded Time</th>"
     
     # Show reproducible commands if details enabled
@@ -929,7 +968,7 @@ def create_performance_scatter_plot(state):
             # Axis styling
             xaxis=dict(
                 title=dict(
-                    text="TPS for 1 User",
+                    text="TPS per user (tokens/s/req) - higher is better",
                     font=dict(
                         family="Arial, sans-serif",
                         size=14,
@@ -947,7 +986,7 @@ def create_performance_scatter_plot(state):
             
             yaxis=dict(
                 title=dict(
-                    text="Throughput (TPS)",
+                    text="Total TPS per system (tokens/s) - higher is better",
                     font=dict(
                         family="Arial, sans-serif",
                         size=14,
@@ -1016,7 +1055,18 @@ def create_custom_scatter_plot(state, x_metric, y_metric):
             "Output $/1M tokens": "output_cost_per_million",
             "TTFT (ms)": "mean_ttft_ms",
             "TPOT (ms)": "mean_tpot_ms",
-            "Per Request Throughput (t/s/req)": "per_request_throughput"
+            "TPS for 1 User (tokens/s/req)": "per_request_throughput"
+        }
+        
+        # Define which metrics are "higher is better" vs "lower is better"
+        higher_is_better = {
+            "Input Throughput (tokens/s)": True,
+            "Input $/1M tokens": False,
+            "Output Throughput (tokens/s)": True,
+            "Output $/1M tokens": False,
+            "TTFT (ms)": False,
+            "TPOT (ms)": False,
+            "TPS for 1 User (tokens/s/req)": True
         }
         
         x_column = metric_mapping.get(x_metric)
@@ -1157,6 +1207,10 @@ def create_custom_scatter_plot(state, x_metric, y_metric):
                 )
             )
         
+        # Create axis labels with "higher/lower is better" annotations
+        x_label = f"{x_metric} - {'higher is better' if higher_is_better.get(x_metric, True) else 'lower is better'}"
+        y_label = f"{y_metric} - {'higher is better' if higher_is_better.get(y_metric, True) else 'lower is better'}"
+        
         # Update layout to match GTC keynote style
         fig.update_layout(
             # Dark theme with black background
@@ -1179,7 +1233,7 @@ def create_custom_scatter_plot(state, x_metric, y_metric):
             # Axis styling
             xaxis=dict(
                 title=dict(
-                    text=x_metric,
+                    text=x_label,
                     font=dict(
                         family="Arial, sans-serif",
                         size=14,
@@ -1197,7 +1251,7 @@ def create_custom_scatter_plot(state, x_metric, y_metric):
             
             yaxis=dict(
                 title=dict(
-                    text=y_metric,
+                    text=y_label,
                     font=dict(
                         family="Arial, sans-serif",
                         size=14,
@@ -1263,7 +1317,7 @@ def create_top5_bar_chart(state, primary_metric, secondary_metric=None):
             "Output $/1M tokens": ("output_cost_per_million", False),
             "TTFT (ms)": ("mean_ttft_ms", False),
             "TPOT (ms)": ("mean_tpot_ms", False),
-            "Per Request Throughput (t/s/req)": ("per_request_throughput", True)
+            "TPS for 1 User (tokens/s/req)": ("per_request_throughput", True)
         }
         
         primary_column, primary_higher_is_better = metric_mapping.get(primary_metric, ("input_throughput", True))
@@ -1310,13 +1364,19 @@ def create_top5_bar_chart(state, primary_metric, secondary_metric=None):
             axis=1
         )
         
+        # Create a better title based on whether higher or lower is better
+        if primary_higher_is_better:
+            plot_title = f"Highest Performing Sub-runs by {primary_metric}"
+        else:
+            plot_title = f"Highest Performing Sub-runs by {primary_metric} (Lower is Better)"
+        
         # Now directly create a Plotly figure instead of using matplotlib
         fig = go.Figure()
         
         # Set up the layout first with light theme
         fig.update_layout(
             title=dict(
-                text=f"Top 5 Performance Ranking: {primary_metric}",
+                text=plot_title,
                 font=dict(size=20, color="#333333", weight="bold"),
                 x=0.5  
             ),
@@ -1347,7 +1407,7 @@ def create_top5_bar_chart(state, primary_metric, secondary_metric=None):
         bar_width = 0.35 if secondary_metric else 0.7
 
         if secondary_metric and secondary_metric in metric_mapping:
-            secondary_column, _ = metric_mapping.get(secondary_metric)
+            secondary_column, secondary_higher_is_better = metric_mapping.get(secondary_metric)
             if secondary_column in df_sorted.columns and df_sorted[secondary_column].notna().all() and (df_sorted[secondary_column] > 0).all():
 
                 centered_tickvals = [i + bar_width/2 for i in range(len(df_sorted))]
@@ -1378,12 +1438,15 @@ def create_top5_bar_chart(state, primary_metric, secondary_metric=None):
                 tickvals=list(range(len(df_sorted))),
                 tickangle=0,
                 showgrid=False,
-                range=x_range
+                range=[-0.45, len(df_sorted) - 0.2]
             )
                 
+        # Add label indicating if higher or lower is better for primary metric
+        primary_label = f"{primary_metric} - {'higher is better' if primary_higher_is_better else 'lower is better'}"
+        
         fig.update_yaxes(
             title=dict(
-                text=primary_metric,
+                text=primary_label,
                 font=dict(
                     size=12,
                     color="#1F77B4",
@@ -1419,7 +1482,7 @@ def create_top5_bar_chart(state, primary_metric, secondary_metric=None):
         
         # If we have a secondary metric, add it as a second bar
         if secondary_metric and secondary_metric in metric_mapping:
-            secondary_column, _ = metric_mapping.get(secondary_metric)
+            secondary_column, secondary_higher_is_better = metric_mapping.get(secondary_metric)
             
             if secondary_column in df_sorted.columns and df_sorted[secondary_column].notna().all() and (df_sorted[secondary_column] > 0).all():
 
@@ -1427,16 +1490,19 @@ def create_top5_bar_chart(state, primary_metric, secondary_metric=None):
                 primary_max = df_sorted[primary_column].max() * 1.1
                 fig.update_yaxes(range=[0, primary_max])
                 
+                # Add label indicating if higher or lower is better for secondary metric
+                secondary_label = f"{secondary_metric} - {'higher is better' if secondary_higher_is_better else 'lower is better'}"
+                
                 # Add a second y-axis with proper range to ensure alignment
                 fig.update_layout(
                     title=dict(
-                        text=f"Top 5 Performance Ranking: {primary_metric}",
+                        text=plot_title,
                         font=dict(size=20, color="#333333", weight="bold"),
                         x=0.5
                     ),
                     yaxis2=dict(
                         title=dict(
-                            text=secondary_metric,
+                            text=secondary_label,
                             font=dict(
                                 size=12,
                                 color="#FF7F0E",
@@ -1623,9 +1689,10 @@ def create_interface():
         
         # Create plot - directly use Gradio's plot component with the figure
         with gr.Column(visible=True):
-            gr.HTML("<h2 style='text-align: center; margin-top: 20px;'>Inference Performance Comparison (Smart AI Fast Response (TPS for 1 User) vs Throughput (TPS))</h2>")
+            gr.HTML("<h2 style='text-align: center; margin-top: 20px;'>Inference Performance Comparison (TPS per user vs Total TPS per system)</h2>")
+            gr.HTML("<h3 style='text-align: center; margin-top: 10px;'>Inspired by 'Inference at Scale Is Extreme Computing' section of <a href='https://www.youtube.com/live/_waPvOwL9Z8?t=3305s' target='_blank'>NVIDIA GTC 2025 Keynote</a></h3>")
             plot = gr.Plot(value=create_performance_scatter_plot(state))
-            plot_message = gr.HTML("<div style='text-align: center; font-size: 0.9rem; margin-top: 10px; color: #888;'>X-axis: Smart AI Fast Response (TPS for 1 User) | Y-axis: Throughput (TPS)</div>")
+            plot_message = gr.HTML("<div style='text-align: center; font-size: 0.9rem; margin-top: 10px; color: #888;'>X-axis: TPS per user (tokens/s/req) - " + METRIC_DEFINITIONS["TPS for 1 User (tokens/s/req)"] + "<br><br>Y-axis: Total TPS per system (tokens/s) - " + METRIC_DEFINITIONS["Output Throughput (tokens/s)"] + "<br><br>For more information, watch NVIDIA GTC 2025 Keynote Inference at Scale is Extreme Computing section: <a href='https://www.youtube.com/live/_waPvOwL9Z8?t=3305s' target='_blank'>https://www.youtube.com/live/_waPvOwL9Z8?t=3305s</a></div>")
             
         # Custom plot with selectable metrics
         with gr.Column(visible=True):
@@ -1644,12 +1711,16 @@ def create_interface():
                 )
             
             custom_plot = gr.Plot(value=create_custom_scatter_plot(state, state.x_metric, state.y_metric))
-            custom_plot_message = gr.HTML(f"<div style='text-align: center; font-size: 0.9rem; margin-top: 10px; color: #888;'>X-axis: {state.x_metric} | Y-axis: {state.y_metric}</div>")
-        
-        # Top 5
-        with gr.Column(visible=True):
-            gr.HTML("<h2 style='text-align: center; margin-top: 20px;'>Top 5 Performance Ranking</h2>")
             
+            # Get metric explanations for initial display
+            x_explanation = METRIC_DEFINITIONS.get(state.x_metric, "")
+            y_explanation = METRIC_DEFINITIONS.get(state.y_metric, "")
+            
+            # Create a simple message with axis explanations
+            custom_plot_message = gr.HTML(f"<div style='text-align: left; font-size: 0.9rem; margin-top: 10px; color: #666;'>X-axis: {state.x_metric} - {x_explanation}<br><br>Y-axis: {state.y_metric} - {y_explanation}<br><br> Reference: <a href='https://docs.nvidia.com/nim/benchmarking/llm/latest/metrics.html' target='_blank'>NVIDIA LLM Benchmarking Metrics Documentation</a></div>")
+        
+        # Top 5 plot without title
+        with gr.Column(visible=True):
             top5_plot = gr.Plot(value=create_top5_bar_chart(state, state.x_metric, state.y_metric), elem_id="top5-plot")
             
             
@@ -1780,12 +1851,13 @@ def create_interface():
             # Update Top 5 chart with the same X-axis metric as primary and Y-axis metric as secondary
             top5_plot_fig = create_top5_bar_chart(state, x_metric, y_metric)
             
-            # Update Top 5 message text in English
-            message_text = f"<div style='text-align: center; font-size: 0.9rem; margin-top: 15px; color: #666;'>Currently showing: <b>{x_metric}</b> as primary metric, <b>{y_metric}</b> as secondary metric</div>"
+            # Get metric explanations from the definitions dictionary
+            x_explanation = METRIC_DEFINITIONS.get(x_metric, "")
+            y_explanation = METRIC_DEFINITIONS.get(y_metric, "")
             
             return {
                 custom_plot: custom_plot_fig,
-                custom_plot_message: f"<div style='text-align: center; font-size: 0.9rem; margin-top: 10px; color: #888;'>X-axis: {x_metric} | Y-axis: {y_metric}</div>",
+                custom_plot_message: f"<div style='text-align: left; font-size: 0.9rem; margin-top: 10px; color: #666;'>X-axis: {x_metric} - {x_explanation}<br><br>Y-axis: {y_metric} - {y_explanation}<br><br> Reference: <a href='https://docs.nvidia.com/nim/benchmarking/llm/latest/metrics.html' target='_blank'>NVIDIA LLM Benchmarking Metrics Documentation</a></div>",
                 top5_plot: top5_plot_fig
             }
         
