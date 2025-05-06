@@ -320,7 +320,7 @@ class SGLangEngine(BaseEngine):
         Returns:
             Optional[str]: The determined dtype or None if unable to determine
         """
-        config_json = get_model_config_json(self.container_id, self.model, self.hf_cache_dir)
+        config_json = get_model_config_json(self.container_id, self.model)
         if config_json and "torch_dtype" in config_json:
             # If torch_dtype exists in config.json, use that value
             torch_dtype = config_json["torch_dtype"]

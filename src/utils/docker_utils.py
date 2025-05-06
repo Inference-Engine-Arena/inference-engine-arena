@@ -348,7 +348,7 @@ def extract_container_engine_args(container_detail: Dict[str, Any]) -> Dict[str,
 
     return model, engine_args
 
-def get_model_config_json(container_id: str, model_name: str, hf_cache_dir: str) -> Optional[Dict[str, Any]]:
+def get_model_config_json(container_id: str, model_name: str) -> Optional[Dict[str, Any]]:
     """
     Attempt to get a model's config.json from a Docker container.
     
@@ -370,7 +370,7 @@ def get_model_config_json(container_id: str, model_name: str, hf_cache_dir: str)
         # Try direct path for HuggingFace models in the new path format
         cmd = [
             "docker", "exec", container_id,
-            "bash", "-c", f"find {hf_cache_dir}/hub/models--{normalized_model_name} -name 'config.json' | head -n 1"
+            "bash", "-c", f"find /root/.cache/huggingface/hub/models--{normalized_model_name} -name 'config.json' | head -n 1"
         ]
         result = run_docker_command(cmd)
         if result["success"] and result["output"].strip():
