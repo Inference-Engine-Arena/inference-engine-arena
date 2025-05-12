@@ -540,16 +540,7 @@ def process_leaderboard_data(state):
         
         # Create better labels for the legend
         df['label'] = df.apply(
-            lambda row: (
-                f"{row['model']}_{row.get('gpu', '')}_{row.get('precision', '')}_{row['engine']}_" + (
-                    f"{row.get('benchmark_config', {}).get('dataset-name', '')}_"
-                    f"{row.get('benchmark_config', {}).get('random-input-len', '')}_"
-                    f"{row.get('benchmark_config', {}).get('random-output-len', '')}_"
-                    f"{row.get('benchmark_config', {}).get('random-prefix-len', '')}"
-                    if state.show_custom_benchmarks
-                    else f"{row.get('benchmark_config', '')}"
-                )
-            ),
+            lambda row: f"{row['model']} - {row['engine']} ({row.get('precision', 'Unknown')})",
             axis=1
         )
 
