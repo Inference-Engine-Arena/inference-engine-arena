@@ -15,7 +15,7 @@ from dotenv import load_dotenv
 load_dotenv()
 
 # Configuration
-API_BASE_URL = os.getenv('API_BASE_URL')
+API_BASE_URL = 'https://iearena.org'
 
 AUTH_DIR = Path(__file__).parent.parent.parent / '.global_auth'
 TOKEN_FILE = AUTH_DIR / 'auth_token.json'
