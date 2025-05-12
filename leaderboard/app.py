@@ -1689,7 +1689,7 @@ def create_interface():
                 with gr.Column(elem_classes="advanced-filter-box"):
                     argnv_pairs_textbox = gr.Textbox(
                         label="Filter by Engine Args, Env Vars, Benchmark Config", 
-                        placeholder="e.g. max-num-seqs:256,request_rate:20"
+                        placeholder="e.g. max-num-seqs:256,request-rate:20"
                     )
                 
                 # Subrun IDs filter
