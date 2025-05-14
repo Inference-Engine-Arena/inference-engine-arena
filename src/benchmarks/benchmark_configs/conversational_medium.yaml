@@ -8,7 +8,7 @@ dataset-name: random
 random-input-len: 1000
 random-output-len: 100
 random-prefix-len: 2000
-num-prompts: 50
+num-prompts: 500
 
 # Request parameters
 request-rate: 5
