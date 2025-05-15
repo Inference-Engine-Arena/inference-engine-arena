@@ -1,9 +1,205 @@
 runs:
-  # Standard reference
   - engine:
       - type: vllm
-        model: NousResearch/Meta-Llama-3.1-8B
-        args: "--tensor-parallel-size 4 --max-num-batched-tokens 163840 --max-num-seqs 256"
+        model: meta-llama/Llama-3.3-70B-Instruct
+        args: "--tensor-parallel-size 4 --trust-remote-code --no-enable-prefix-caching --disable-log-requests"
+        env: {VLLM_USE_FLASHINFER_SAMPLER: "1"}
+    benchmarks:
+      - type: conversational_short
+        dataset-name: random
+        random-input-len: 100
+        random-output-len: 100
+        random-prefix-len: 0
+        num-prompts: 1000
+        request-rate: 10
+      - type: conversational_medium
+        dataset-name: random
+        random-input-len: 1000
+        random-output-len: 100
+        random-prefix-len: 2000
+        num-prompts: 500
+        request-rate: 5
+      - type: conversational_long
+        dataset-name: random
+        random-input-len: 5000
+        random-output-len: 100
+        random-prefix-len: 7000
+        num-prompts: 200
+        request-rate: 2
+      - type: summarization
+        dataset-name: random
+        random-input-len: 12000
+        random-output-len: 100
+        random-prefix-len: 0
+        num-prompts: 200
+        request-rate: 2
+      - type: write_essay
+        dataset-name: random
+        random-input-len: 100
+        random-output-len: 3000
+        random-prefix-len: 0
+        num-prompts: 200
+        request-rate: 2
+      - type: rewrite_essay
+        dataset-name: random
+        random-input-len: 12000
+        random-output-len: 3000
+        random-prefix-len: 0
+        num-prompts: 200
+        request-rate: 2
+
+  - engine:
+      - type: vllm
+        model: meta-llama/Llama-3.3-70B-Instruct
+        args: "--tensor-parallel-size 4 --trust-remote-code --disable-log-requests"
+        env: {VLLM_USE_FLASHINFER_SAMPLER: "1"}
+    benchmarks:
+      - type: conversational_short
+        dataset-name: random
+        random-input-len: 100
+        random-output-len: 100
+        random-prefix-len: 0
+        num-prompts: 1000
+        request-rate: 10
+      - type: conversational_medium
+        dataset-name: random
+        random-input-len: 1000
+        random-output-len: 100
+        random-prefix-len: 2000
+        num-prompts: 500
+        request-rate: 5
+      - type: conversational_long
+        dataset-name: random
+        random-input-len: 5000
+        random-output-len: 100
+        random-prefix-len: 7000
+        num-prompts: 200
+        request-rate: 2
+      - type: summarization
+        dataset-name: random
+        random-input-len: 12000
+        random-output-len: 100
+        random-prefix-len: 0
+        num-prompts: 200
+        request-rate: 2
+      - type: write_essay
+        dataset-name: random
+        random-input-len: 100
+        random-output-len: 3000
+        random-prefix-len: 0
+        num-prompts: 200
+        request-rate: 2
+      - type: rewrite_essay
+        dataset-name: random
+        random-input-len: 12000
+        random-output-len: 3000
+        random-prefix-len: 0
+        num-prompts: 200
+        request-rate: 2
+
+  - engine:
+      - type: vllm
+        model: meta-llama/Llama-3.3-70B-Instruct
+        args: "--tensor-parallel-size 4 --trust-remote-code --no-enable-prefix-caching"
+        env: {VLLM_USE_FLASHINFER_SAMPLER: "1"}
+    benchmarks:
+      - type: conversational_short
+        dataset-name: random
+        random-input-len: 100
+        random-output-len: 100
+        random-prefix-len: 0
+        num-prompts: 1000
+        request-rate: 10
+      - type: conversational_medium
+        dataset-name: random
+        random-input-len: 1000
+        random-output-len: 100
+        random-prefix-len: 2000
+        num-prompts: 500
+        request-rate: 5
+      - type: conversational_long
+        dataset-name: random
+        random-input-len: 5000
+        random-output-len: 100
+        random-prefix-len: 7000
+        num-prompts: 200
+        request-rate: 2
+      - type: summarization
+        dataset-name: random
+        random-input-len: 12000
+        random-output-len: 100
+        random-prefix-len: 0
+        num-prompts: 200
+        request-rate: 2
+      - type: write_essay
+        dataset-name: random
+        random-input-len: 100
+        random-output-len: 3000
+        random-prefix-len: 0
+        num-prompts: 200
+        request-rate: 2
+      - type: rewrite_essay
+        dataset-name: random
+        random-input-len: 12000
+        random-output-len: 3000
+        random-prefix-len: 0
+        num-prompts: 200
+        request-rate: 2
+
+  - engine:
+      - type: vllm
+        model: meta-llama/Llama-3.3-70B-Instruct
+        args: "--tensor-parallel-size 4 --trust-remote-code"
+        env: {VLLM_USE_FLASHINFER_SAMPLER: "1"}
+    benchmarks:
+      - type: conversational_short
+        dataset-name: random
+        random-input-len: 100
+        random-output-len: 100
+        random-prefix-len: 0
+        num-prompts: 1000
+        request-rate: 10
+      - type: conversational_medium
+        dataset-name: random
+        random-input-len: 1000
+        random-output-len: 100
+        random-prefix-len: 2000
+        num-prompts: 500
+        request-rate: 5
+      - type: conversational_long
+        dataset-name: random
+        random-input-len: 5000
+        random-output-len: 100
+        random-prefix-len: 7000
+        num-prompts: 200
+        request-rate: 2
+      - type: summarization
+        dataset-name: random
+        random-input-len: 12000
+        random-output-len: 100
+        random-prefix-len: 0
+        num-prompts: 200
+        request-rate: 2
+      - type: write_essay
+        dataset-name: random
+        random-input-len: 100
+        random-output-len: 3000
+        random-prefix-len: 0
+        num-prompts: 200
+        request-rate: 2
+      - type: rewrite_essay
+        dataset-name: random
+        random-input-len: 12000
+        random-output-len: 3000
+        random-prefix-len: 0
+        num-prompts: 200
+        request-rate: 2
+
+
+  - engine:
+      - type: vllm
+        model: meta-llama/Llama-3.3-70B-Instruct
+        args: "--tensor-parallel-size 4 --trust-remote-code --no-enable-prefix-caching --disable-log-requests"
         env: {}
     benchmarks:
       - type: conversational_short
@@ -11,49 +207,48 @@ runs:
         random-input-len: 100
         random-output-len: 100
         random-prefix-len: 0
-        num-prompts: 50
+        num-prompts: 1000
         request-rate: 10
       - type: conversational_medium
         dataset-name: random
         random-input-len: 1000
         random-output-len: 100
         random-prefix-len: 2000
-        num-prompts: 50
+        num-prompts: 500
         request-rate: 5
       - type: conversational_long
         dataset-name: random
         random-input-len: 5000
         random-output-len: 100
         random-prefix-len: 7000
-        num-prompts: 50
+        num-prompts: 200
         request-rate: 2
       - type: summarization
         dataset-name: random
         random-input-len: 12000
         random-output-len: 100
         random-prefix-len: 0
-        num-prompts: 20
+        num-prompts: 200
         request-rate: 2
       - type: write_essay
         dataset-name: random
         random-input-len: 100
         random-output-len: 3000
         random-prefix-len: 0
-        num-prompts: 20
+        num-prompts: 200
         request-rate: 2
       - type: rewrite_essay
         dataset-name: random
         random-input-len: 12000
         random-output-len: 3000
         random-prefix-len: 0
-        num-prompts: 20
+        num-prompts: 200
         request-rate: 2
 
-  # Standard reference with fp8 quantization
   - engine:
       - type: vllm
-        model: NousResearch/Meta-Llama-3.1-8B
-        args: "--tensor-parallel-size 4 --max-num-batched-tokens 163840 --max-num-seqs 256 --quantization fp8"
+        model: meta-llama/Llama-3.3-70B-Instruct
+        args: "--tensor-parallel-size 4 --trust-remote-code"
         env: {}
     benchmarks:
       - type: conversational_short
@@ -61,49 +256,249 @@ runs:
         random-input-len: 100
         random-output-len: 100
         random-prefix-len: 0
-        num-prompts: 50
+        num-prompts: 1000
         request-rate: 10
       - type: conversational_medium
         dataset-name: random
         random-input-len: 1000
         random-output-len: 100
         random-prefix-len: 2000
-        num-prompts: 50
+        num-prompts: 500
         request-rate: 5
       - type: conversational_long
         dataset-name: random
         random-input-len: 5000
         random-output-len: 100
         random-prefix-len: 7000
-        num-prompts: 50
+        num-prompts: 200
         request-rate: 2
       - type: summarization
         dataset-name: random
         random-input-len: 12000
         random-output-len: 100
         random-prefix-len: 0
-        num-prompts: 20
+        num-prompts: 200
         request-rate: 2
       - type: write_essay
         dataset-name: random
         random-input-len: 100
         random-output-len: 3000
         random-prefix-len: 0
-        num-prompts: 20
+        num-prompts: 200
         request-rate: 2
       - type: rewrite_essay
         dataset-name: random
         random-input-len: 12000
         random-output-len: 3000
         random-prefix-len: 0
-        num-prompts: 20
+        num-prompts: 200
         request-rate: 2
 
-  # With enforce_eager
+    # Test as a standard reference
   - engine:
-      - type: vllm
-        model: NousResearch/Meta-Llama-3.1-8B
-        args: "--tensor-parallel-size 4 --max-num-batched-tokens 163840 --max-num-seqs 256 --enforce-eager"
+      - type: sglang
+        model: meta-llama/Llama-3.3-70B-Instruct
+        args: "--trust-remote-code --disable-radix-cache --load-format dummy --tp 4"
+        env: {SGL_ENABLE_JIT_DEEPGEMM: "1"}
+    benchmarks:
+      - type: conversational_short
+        dataset-name: random
+        random-input-len: 100
+        random-output-len: 100
+        random-prefix-len: 0
+        num-prompts: 1000
+        request-rate: 10
+      - type: conversational_medium
+        dataset-name: random
+        random-input-len: 1000
+        random-output-len: 100
+        random-prefix-len: 2000
+        num-prompts: 500
+        request-rate: 5
+      - type: conversational_long
+        dataset-name: random
+        random-input-len: 5000
+        random-output-len: 100
+        random-prefix-len: 7000
+        num-prompts: 200
+        request-rate: 2
+      - type: summarization
+        dataset-name: random
+        random-input-len: 12000
+        random-output-len: 100
+        random-prefix-len: 0
+        num-prompts: 200
+        request-rate: 2
+      - type: write_essay
+        dataset-name: random
+        random-input-len: 100
+        random-output-len: 3000
+        random-prefix-len: 0
+        num-prompts: 200
+        request-rate: 2
+      - type: rewrite_essay
+        dataset-name: random
+        random-input-len: 12000
+        random-output-len: 3000
+        random-prefix-len: 0
+        num-prompts: 200
+        request-rate: 2
+
+    # Test as a standard reference
+  - engine:
+      - type: sglang
+        model: meta-llama/Llama-3.3-70B-Instruct
+        args: "--trust-remote-code --load-format dummy --tp 4"
+        env: {SGL_ENABLE_JIT_DEEPGEMM: "1"}
+    benchmarks:
+      - type: conversational_short
+        dataset-name: random
+        random-input-len: 100
+        random-output-len: 100
+        random-prefix-len: 0
+        num-prompts: 1000
+        request-rate: 10
+      - type: conversational_medium
+        dataset-name: random
+        random-input-len: 1000
+        random-output-len: 100
+        random-prefix-len: 2000
+        num-prompts: 500
+        request-rate: 5
+      - type: conversational_long
+        dataset-name: random
+        random-input-len: 5000
+        random-output-len: 100
+        random-prefix-len: 7000
+        num-prompts: 200
+        request-rate: 2
+      - type: summarization
+        dataset-name: random
+        random-input-len: 12000
+        random-output-len: 100
+        random-prefix-len: 0
+        num-prompts: 200
+        request-rate: 2
+      - type: write_essay
+        dataset-name: random
+        random-input-len: 100
+        random-output-len: 3000
+        random-prefix-len: 0
+        num-prompts: 200
+        request-rate: 2
+      - type: rewrite_essay
+        dataset-name: random
+        random-input-len: 12000
+        random-output-len: 3000
+        random-prefix-len: 0
+        num-prompts: 200
+        request-rate: 2
+
+    # Test as a standard reference
+  - engine:
+      - type: sglang
+        model: meta-llama/Llama-3.3-70B-Instruct
+        args: "--trust-remote-code --load-format dummy --tp 4"
+        env: {SGL_ENABLE_JIT_DEEPGEMM: "1"}
+    benchmarks:
+      - type: conversational_short
+        dataset-name: random
+        random-input-len: 100
+        random-output-len: 100
+        random-prefix-len: 0
+        num-prompts: 1000
+        request-rate: 10
+      - type: conversational_medium
+        dataset-name: random
+        random-input-len: 1000
+        random-output-len: 100
+        random-prefix-len: 2000
+        num-prompts: 500
+        request-rate: 5
+      - type: conversational_long
+        dataset-name: random
+        random-input-len: 5000
+        random-output-len: 100
+        random-prefix-len: 7000
+        num-prompts: 200
+        request-rate: 2
+      - type: summarization
+        dataset-name: random
+        random-input-len: 12000
+        random-output-len: 100
+        random-prefix-len: 0
+        num-prompts: 200
+        request-rate: 2
+      - type: write_essay
+        dataset-name: random
+        random-input-len: 100
+        random-output-len: 3000
+        random-prefix-len: 0
+        num-prompts: 200
+        request-rate: 2
+      - type: rewrite_essay
+        dataset-name: random
+        random-input-len: 12000
+        random-output-len: 3000
+        random-prefix-len: 0
+        num-prompts: 200
+        request-rate: 2
+
+    # Test as a standard reference
+  - engine:
+      - type: sglang
+        model: meta-llama/Llama-3.3-70B-Instruct
+        args: "--trust-remote-code --tp 4"
+        env: {SGL_ENABLE_JIT_DEEPGEMM: "1"}
+    benchmarks:
+      - type: conversational_short
+        dataset-name: random
+        random-input-len: 100
+        random-output-len: 100
+        random-prefix-len: 0
+        num-prompts: 1000
+        request-rate: 10
+      - type: conversational_medium
+        dataset-name: random
+        random-input-len: 1000
+        random-output-len: 100
+        random-prefix-len: 2000
+        num-prompts: 500
+        request-rate: 5
+      - type: conversational_long
+        dataset-name: random
+        random-input-len: 5000
+        random-output-len: 100
+        random-prefix-len: 7000
+        num-prompts: 200
+        request-rate: 2
+      - type: summarization
+        dataset-name: random
+        random-input-len: 12000
+        random-output-len: 100
+        random-prefix-len: 0
+        num-prompts: 200
+        request-rate: 2
+      - type: write_essay
+        dataset-name: random
+        random-input-len: 100
+        random-output-len: 3000
+        random-prefix-len: 0
+        num-prompts: 200
+        request-rate: 2
+      - type: rewrite_essay
+        dataset-name: random
+        random-input-len: 12000
+        random-output-len: 3000
+        random-prefix-len: 0
+        num-prompts: 200
+        request-rate: 2
+
+    # Test as a standard reference
+  - engine:
+      - type: sglang
+        model: meta-llama/Llama-3.3-70B-Instruct
+        args: "--trust-remote-code --disable-radix-cache --load-format dummy --tp 4"
         env: {}
     benchmarks:
       - type: conversational_short
@@ -111,49 +506,50 @@ runs:
         random-input-len: 100
         random-output-len: 100
         random-prefix-len: 0
-        num-prompts: 50
+        num-prompts: 1000
         request-rate: 10
       - type: conversational_medium
         dataset-name: random
         random-input-len: 1000
         random-output-len: 100
         random-prefix-len: 2000
-        num-prompts: 50
+        num-prompts: 500
         request-rate: 5
       - type: conversational_long
         dataset-name: random
         random-input-len: 5000
         random-output-len: 100
         random-prefix-len: 7000
-        num-prompts: 50
+        num-prompts: 200
         request-rate: 2
       - type: summarization
         dataset-name: random
         random-input-len: 12000
         random-output-len: 100
         random-prefix-len: 0
-        num-prompts: 20
+        num-prompts: 200
         request-rate: 2
       - type: write_essay
         dataset-name: random
         random-input-len: 100
         random-output-len: 3000
         random-prefix-len: 0
-        num-prompts: 20
+        num-prompts: 200
         request-rate: 2
       - type: rewrite_essay
         dataset-name: random
         random-input-len: 12000
         random-output-len: 3000
         random-prefix-len: 0
-        num-prompts: 20
+        num-prompts: 200
         request-rate: 2
 
-  # With enforce_eager and fp8 quantization
+
+    # Test as a standard reference
   - engine:
-      - type: vllm
-        model: NousResearch/Meta-Llama-3.1-8B
-        args: "--tensor-parallel-size 4 --max-num-batched-tokens 163840 --max-num-seqs 256 --enforce-eager --quantization fp8"
+      - type: sglang
+        model: meta-llama/Llama-3.3-70B-Instruct
+        args: "--trust-remote-code --tp 4"
         env: {}
     benchmarks:
       - type: conversational_short
@@ -161,340 +557,40 @@ runs:
         random-input-len: 100
         random-output-len: 100
         random-prefix-len: 0
-        num-prompts: 50
+        num-prompts: 1000
         request-rate: 10
       - type: conversational_medium
         dataset-name: random
         random-input-len: 1000
         random-output-len: 100
         random-prefix-len: 2000
-        num-prompts: 50
+        num-prompts: 500
         request-rate: 5
       - type: conversational_long
         dataset-name: random
         random-input-len: 5000
         random-output-len: 100
         random-prefix-len: 7000
-        num-prompts: 50
+        num-prompts: 200
         request-rate: 2
       - type: summarization
         dataset-name: random
         random-input-len: 12000
         random-output-len: 100
         random-prefix-len: 0
-        num-prompts: 20
+        num-prompts: 200
         request-rate: 2
       - type: write_essay
         dataset-name: random
         random-input-len: 100
         random-output-len: 3000
         random-prefix-len: 0
-        num-prompts: 20
+        num-prompts: 200
         request-rate: 2
       - type: rewrite_essay
         dataset-name: random
         random-input-len: 12000
         random-output-len: 3000
         random-prefix-len: 0
-        num-prompts: 20
+        num-prompts: 200
         request-rate: 2
-
-  # With slow tokenizer mode
-  - engine:
-      - type: vllm
-        model: NousResearch/Meta-Llama-3.1-8B
-        args: "--tensor-parallel-size 4 --max-num-batched-tokens 163840 --max-num-seqs 256 --tokenizer-mode slow"
-        env: {}
-    benchmarks:
-      - type: conversational_short
-        dataset-name: random
-        random-input-len: 100
-        random-output-len: 100
-        random-prefix-len: 0
-        num-prompts: 50
-        request-rate: 10
-      - type: conversational_medium
-        dataset-name: random
-        random-input-len: 1000
-        random-output-len: 100
-        random-prefix-len: 2000
-        num-prompts: 50
-        request-rate: 5
-      - type: conversational_long
-        dataset-name: random
-        random-input-len: 5000
-        random-output-len: 100
-        random-prefix-len: 7000
-        num-prompts: 50
-        request-rate: 2
-      - type: summarization
-        dataset-name: random
-        random-input-len: 12000
-        random-output-len: 100
-        random-prefix-len: 0
-        num-prompts: 20
-        request-rate: 2
-      - type: write_essay
-        dataset-name: random
-        random-input-len: 100
-        random-output-len: 3000
-        random-prefix-len: 0
-        num-prompts: 20
-        request-rate: 2
-      - type: rewrite_essay
-        dataset-name: random
-        random-input-len: 12000
-        random-output-len: 3000
-        random-prefix-len: 0
-        num-prompts: 20
-        request-rate: 2
-
-  # With slow tokenizer mode and fp8 quantization
-  - engine:
-      - type: vllm
-        model: NousResearch/Meta-Llama-3.1-8B
-        args: "--tensor-parallel-size 4 --max-num-batched-tokens 163840 --max-num-seqs 256 --tokenizer-mode slow --quantization fp8"
-        env: {}
-    benchmarks:
-      - type: conversational_short
-        dataset-name: random
-        random-input-len: 100
-        random-output-len: 100
-        random-prefix-len: 0
-        num-prompts: 50
-        request-rate: 10
-      - type: conversational_medium
-        dataset-name: random
-        random-input-len: 1000
-        random-output-len: 100
-        random-prefix-len: 2000
-        num-prompts: 50
-        request-rate: 5
-      - type: conversational_long
-        dataset-name: random
-        random-input-len: 5000
-        random-output-len: 100
-        random-prefix-len: 7000
-        num-prompts: 50
-        request-rate: 2
-      - type: summarization
-        dataset-name: random
-        random-input-len: 12000
-        random-output-len: 100
-        random-prefix-len: 0
-        num-prompts: 20
-        request-rate: 2
-      - type: write_essay
-        dataset-name: random
-        random-input-len: 100
-        random-output-len: 3000
-        random-prefix-len: 0
-        num-prompts: 20
-        request-rate: 2
-      - type: rewrite_essay
-        dataset-name: random
-        random-input-len: 12000
-        random-output-len: 3000
-        random-prefix-len: 0
-        num-prompts: 20
-        request-rate: 2
-
-  # With no prefix caching
-  - engine:
-      - type: vllm
-        model: NousResearch/Meta-Llama-3.1-8B
-        args: "--tensor-parallel-size 4 --max-num-batched-tokens 163840 --max-num-seqs 256 --no-enable-prefix-caching"
-        env: {}
-    benchmarks:
-      - type: conversational_short
-        dataset-name: random
-        random-input-len: 100
-        random-output-len: 100
-        random-prefix-len: 0
-        num-prompts: 50
-        request-rate: 10
-      - type: conversational_medium
-        dataset-name: random
-        random-input-len: 1000
-        random-output-len: 100
-        random-prefix-len: 2000
-        num-prompts: 50
-        request-rate: 5
-      - type: conversational_long
-        dataset-name: random
-        random-input-len: 5000
-        random-output-len: 100
-        random-prefix-len: 7000
-        num-prompts: 50
-        request-rate: 2
-      - type: summarization
-        dataset-name: random
-        random-input-len: 12000
-        random-output-len: 100
-        random-prefix-len: 0
-        num-prompts: 20
-        request-rate: 2
-      - type: write_essay
-        dataset-name: random
-        random-input-len: 100
-        random-output-len: 3000
-        random-prefix-len: 0
-        num-prompts: 20
-        request-rate: 2
-      - type: rewrite_essay
-        dataset-name: random
-        random-input-len: 12000
-        random-output-len: 3000
-        random-prefix-len: 0
-        num-prompts: 20
-        request-rate: 2
-
-  # With no prefix caching and fp8 quantization
-  - engine:
-      - type: vllm
-        model: NousResearch/Meta-Llama-3.1-8B
-        args: "--tensor-parallel-size 4 --max-num-batched-tokens 163840 --max-num-seqs 256 --no-enable-prefix-caching --quantization fp8"
-        env: {}
-    benchmarks:
-      - type: conversational_short
-        dataset-name: random
-        random-input-len: 100
-        random-output-len: 100
-        random-prefix-len: 0
-        num-prompts: 50
-        request-rate: 10
-      - type: conversational_medium
-        dataset-name: random
-        random-input-len: 1000
-        random-output-len: 100
-        random-prefix-len: 2000
-        num-prompts: 50
-        request-rate: 5
-      - type: conversational_long
-        dataset-name: random
-        random-input-len: 5000
-        random-output-len: 100
-        random-prefix-len: 7000
-        num-prompts: 50
-        request-rate: 2
-      - type: summarization
-        dataset-name: random
-        random-input-len: 12000
-        random-output-len: 100
-        random-prefix-len: 0
-        num-prompts: 20
-        request-rate: 2
-      - type: write_essay
-        dataset-name: random
-        random-input-len: 100
-        random-output-len: 3000
-        random-prefix-len: 0
-        num-prompts: 20
-        request-rate: 2
-      - type: rewrite_essay
-        dataset-name: random
-        random-input-len: 12000
-        random-output-len: 3000
-        random-prefix-len: 0
-        num-prompts: 20
-        request-rate: 2
-
-  # With VLLM_USE_V1 set to 0
-  - engine:
-      - type: vllm
-        model: NousResearch/Meta-Llama-3.1-8B
-        args: "--tensor-parallel-size 4 --max-num-batched-tokens 163840 --max-num-seqs 256"
-        env: {VLLM_USE_V1: "0"}
-    benchmarks:
-      - type: conversational_short
-        dataset-name: random
-        random-input-len: 100
-        random-output-len: 100
-        random-prefix-len: 0
-        num-prompts: 50
-        request-rate: 10
-      - type: conversational_medium
-        dataset-name: random
-        random-input-len: 1000
-        random-output-len: 100
-        random-prefix-len: 2000
-        num-prompts: 50
-        request-rate: 5
-      - type: conversational_long
-        dataset-name: random
-        random-input-len: 5000
-        random-output-len: 100
-        random-prefix-len: 7000
-        num-prompts: 50
-        request-rate: 2
-      - type: summarization
-        dataset-name: random
-        random-input-len: 12000
-        random-output-len: 100
-        random-prefix-len: 0
-        num-prompts: 20
-        request-rate: 2
-      - type: write_essay
-        dataset-name: random
-        random-input-len: 100
-        random-output-len: 3000
-        random-prefix-len: 0
-        num-prompts: 20
-        request-rate: 2
-      - type: rewrite_essay
-        dataset-name: random
-        random-input-len: 12000
-        random-output-len: 3000
-        random-prefix-len: 0
-        num-prompts: 20
-        request-rate: 2
-
-  # With VLLM_USE_V1 set to 0 and fp8 quantization
-  - engine:
-      - type: vllm
-        model: NousResearch/Meta-Llama-3.1-8B
-        args: "--tensor-parallel-size 4 --max-num-batched-tokens 163840 --max-num-seqs 256 --quantization fp8"
-        env: {VLLM_USE_V1: "0"}
-    benchmarks:
-      - type: conversational_short
-        dataset-name: random
-        random-input-len: 100
-        random-output-len: 100
-        random-prefix-len: 0
-        num-prompts: 50
-        request-rate: 10
-      - type: conversational_medium
-        dataset-name: random
-        random-input-len: 1000
-        random-output-len: 100
-        random-prefix-len: 2000
-        num-prompts: 50
-        request-rate: 5
-      - type: conversational_long
-        dataset-name: random
-        random-input-len: 5000
-        random-output-len: 100
-        random-prefix-len: 7000
-        num-prompts: 50
-        request-rate: 2
-      - type: summarization
-        dataset-name: random
-        random-input-len: 12000
-        random-output-len: 100
-        random-prefix-len: 0
-        num-prompts: 20
-        request-rate: 2
-      - type: write_essay
-        dataset-name: random
-        random-input-len: 100
-        random-output-len: 3000
-        random-prefix-len: 0
-        num-prompts: 20
-        request-rate: 2
-      - type: rewrite_essay
-        dataset-name: random
-        random-input-len: 12000
-        random-output-len: 3000
-        random-prefix-len: 0
-        num-prompts: 20
-        request-rate: 2 

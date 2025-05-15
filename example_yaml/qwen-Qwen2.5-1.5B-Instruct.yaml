@@ -1,0 +1,596 @@
+runs:
+  - engine:
+      - type: vllm
+        model: Qwen/Qwen2.5-1.5B-Instruct
+        args: "--tensor-parallel-size 1 --trust-remote-code --no-enable-prefix-caching --disable-log-requests"
+        env: {VLLM_USE_FLASHINFER_SAMPLER: "1"}
+    benchmarks:
+      - type: conversational_short
+        dataset-name: random
+        random-input-len: 100
+        random-output-len: 100
+        random-prefix-len: 0
+        num-prompts: 1000
+        request-rate: 10
+      - type: conversational_medium
+        dataset-name: random
+        random-input-len: 1000
+        random-output-len: 100
+        random-prefix-len: 2000
+        num-prompts: 500
+        request-rate: 5
+      - type: conversational_long
+        dataset-name: random
+        random-input-len: 5000
+        random-output-len: 100
+        random-prefix-len: 7000
+        num-prompts: 200
+        request-rate: 2
+      - type: summarization
+        dataset-name: random
+        random-input-len: 12000
+        random-output-len: 100
+        random-prefix-len: 0
+        num-prompts: 200
+        request-rate: 2
+      - type: write_essay
+        dataset-name: random
+        random-input-len: 100
+        random-output-len: 3000
+        random-prefix-len: 0
+        num-prompts: 200
+        request-rate: 2
+      - type: rewrite_essay
+        dataset-name: random
+        random-input-len: 12000
+        random-output-len: 3000
+        random-prefix-len: 0
+        num-prompts: 200
+        request-rate: 2
+
+  - engine:
+      - type: vllm
+        model: Qwen/Qwen2.5-1.5B-Instruct
+        args: "--tensor-parallel-size 1 --trust-remote-code --disable-log-requests"
+        env: {VLLM_USE_FLASHINFER_SAMPLER: "1"}
+    benchmarks:
+      - type: conversational_short
+        dataset-name: random
+        random-input-len: 100
+        random-output-len: 100
+        random-prefix-len: 0
+        num-prompts: 1000
+        request-rate: 10
+      - type: conversational_medium
+        dataset-name: random
+        random-input-len: 1000
+        random-output-len: 100
+        random-prefix-len: 2000
+        num-prompts: 500
+        request-rate: 5
+      - type: conversational_long
+        dataset-name: random
+        random-input-len: 5000
+        random-output-len: 100
+        random-prefix-len: 7000
+        num-prompts: 200
+        request-rate: 2
+      - type: summarization
+        dataset-name: random
+        random-input-len: 12000
+        random-output-len: 100
+        random-prefix-len: 0
+        num-prompts: 200
+        request-rate: 2
+      - type: write_essay
+        dataset-name: random
+        random-input-len: 100
+        random-output-len: 3000
+        random-prefix-len: 0
+        num-prompts: 200
+        request-rate: 2
+      - type: rewrite_essay
+        dataset-name: random
+        random-input-len: 12000
+        random-output-len: 3000
+        random-prefix-len: 0
+        num-prompts: 200
+        request-rate: 2
+
+  - engine:
+      - type: vllm
+        model: Qwen/Qwen2.5-1.5B-Instruct
+        args: "--tensor-parallel-size 1 --trust-remote-code --no-enable-prefix-caching"
+        env: {VLLM_USE_FLASHINFER_SAMPLER: "1"}
+    benchmarks:
+      - type: conversational_short
+        dataset-name: random
+        random-input-len: 100
+        random-output-len: 100
+        random-prefix-len: 0
+        num-prompts: 1000
+        request-rate: 10
+      - type: conversational_medium
+        dataset-name: random
+        random-input-len: 1000
+        random-output-len: 100
+        random-prefix-len: 2000
+        num-prompts: 500
+        request-rate: 5
+      - type: conversational_long
+        dataset-name: random
+        random-input-len: 5000
+        random-output-len: 100
+        random-prefix-len: 7000
+        num-prompts: 200
+        request-rate: 2
+      - type: summarization
+        dataset-name: random
+        random-input-len: 12000
+        random-output-len: 100
+        random-prefix-len: 0
+        num-prompts: 200
+        request-rate: 2
+      - type: write_essay
+        dataset-name: random
+        random-input-len: 100
+        random-output-len: 3000
+        random-prefix-len: 0
+        num-prompts: 200
+        request-rate: 2
+      - type: rewrite_essay
+        dataset-name: random
+        random-input-len: 12000
+        random-output-len: 3000
+        random-prefix-len: 0
+        num-prompts: 200
+        request-rate: 2
+
+  - engine:
+      - type: vllm
+        model: Qwen/Qwen2.5-1.5B-Instruct
+        args: "--tensor-parallel-size 1 --trust-remote-code"
+        env: {VLLM_USE_FLASHINFER_SAMPLER: "1"}
+    benchmarks:
+      - type: conversational_short
+        dataset-name: random
+        random-input-len: 100
+        random-output-len: 100
+        random-prefix-len: 0
+        num-prompts: 1000
+        request-rate: 10
+      - type: conversational_medium
+        dataset-name: random
+        random-input-len: 1000
+        random-output-len: 100
+        random-prefix-len: 2000
+        num-prompts: 500
+        request-rate: 5
+      - type: conversational_long
+        dataset-name: random
+        random-input-len: 5000
+        random-output-len: 100
+        random-prefix-len: 7000
+        num-prompts: 200
+        request-rate: 2
+      - type: summarization
+        dataset-name: random
+        random-input-len: 12000
+        random-output-len: 100
+        random-prefix-len: 0
+        num-prompts: 200
+        request-rate: 2
+      - type: write_essay
+        dataset-name: random
+        random-input-len: 100
+        random-output-len: 3000
+        random-prefix-len: 0
+        num-prompts: 200
+        request-rate: 2
+      - type: rewrite_essay
+        dataset-name: random
+        random-input-len: 12000
+        random-output-len: 3000
+        random-prefix-len: 0
+        num-prompts: 200
+        request-rate: 2
+
+
+  - engine:
+      - type: vllm
+        model: Qwen/Qwen2.5-1.5B-Instruct
+        args: "--tensor-parallel-size 1 --trust-remote-code --no-enable-prefix-caching --disable-log-requests"
+        env: {}
+    benchmarks:
+      - type: conversational_short
+        dataset-name: random
+        random-input-len: 100
+        random-output-len: 100
+        random-prefix-len: 0
+        num-prompts: 1000
+        request-rate: 10
+      - type: conversational_medium
+        dataset-name: random
+        random-input-len: 1000
+        random-output-len: 100
+        random-prefix-len: 2000
+        num-prompts: 500
+        request-rate: 5
+      - type: conversational_long
+        dataset-name: random
+        random-input-len: 5000
+        random-output-len: 100
+        random-prefix-len: 7000
+        num-prompts: 200
+        request-rate: 2
+      - type: summarization
+        dataset-name: random
+        random-input-len: 12000
+        random-output-len: 100
+        random-prefix-len: 0
+        num-prompts: 200
+        request-rate: 2
+      - type: write_essay
+        dataset-name: random
+        random-input-len: 100
+        random-output-len: 3000
+        random-prefix-len: 0
+        num-prompts: 200
+        request-rate: 2
+      - type: rewrite_essay
+        dataset-name: random
+        random-input-len: 12000
+        random-output-len: 3000
+        random-prefix-len: 0
+        num-prompts: 200
+        request-rate: 2
+
+  - engine:
+      - type: vllm
+        model: Qwen/Qwen2.5-1.5B-Instruct
+        args: "--tensor-parallel-size 1 --trust-remote-code"
+        env: {}
+    benchmarks:
+      - type: conversational_short
+        dataset-name: random
+        random-input-len: 100
+        random-output-len: 100
+        random-prefix-len: 0
+        num-prompts: 1000
+        request-rate: 10
+      - type: conversational_medium
+        dataset-name: random
+        random-input-len: 1000
+        random-output-len: 100
+        random-prefix-len: 2000
+        num-prompts: 500
+        request-rate: 5
+      - type: conversational_long
+        dataset-name: random
+        random-input-len: 5000
+        random-output-len: 100
+        random-prefix-len: 7000
+        num-prompts: 200
+        request-rate: 2
+      - type: summarization
+        dataset-name: random
+        random-input-len: 12000
+        random-output-len: 100
+        random-prefix-len: 0
+        num-prompts: 200
+        request-rate: 2
+      - type: write_essay
+        dataset-name: random
+        random-input-len: 100
+        random-output-len: 3000
+        random-prefix-len: 0
+        num-prompts: 200
+        request-rate: 2
+      - type: rewrite_essay
+        dataset-name: random
+        random-input-len: 12000
+        random-output-len: 3000
+        random-prefix-len: 0
+        num-prompts: 200
+        request-rate: 2
+
+    # Test as a standard reference
+  - engine:
+      - type: sglang
+        model: Qwen/Qwen2.5-1.5B-Instruct
+        args: "--trust-remote-code --disable-radix-cache --load-format dummy --tp 1"
+        env: {SGL_ENABLE_JIT_DEEPGEMM: "1"}
+    benchmarks:
+      - type: conversational_short
+        dataset-name: random
+        random-input-len: 100
+        random-output-len: 100
+        random-prefix-len: 0
+        num-prompts: 1000
+        request-rate: 10
+      - type: conversational_medium
+        dataset-name: random
+        random-input-len: 1000
+        random-output-len: 100
+        random-prefix-len: 2000
+        num-prompts: 500
+        request-rate: 5
+      - type: conversational_long
+        dataset-name: random
+        random-input-len: 5000
+        random-output-len: 100
+        random-prefix-len: 7000
+        num-prompts: 200
+        request-rate: 2
+      - type: summarization
+        dataset-name: random
+        random-input-len: 12000
+        random-output-len: 100
+        random-prefix-len: 0
+        num-prompts: 200
+        request-rate: 2
+      - type: write_essay
+        dataset-name: random
+        random-input-len: 100
+        random-output-len: 3000
+        random-prefix-len: 0
+        num-prompts: 200
+        request-rate: 2
+      - type: rewrite_essay
+        dataset-name: random
+        random-input-len: 12000
+        random-output-len: 3000
+        random-prefix-len: 0
+        num-prompts: 200
+        request-rate: 2
+
+    # Test as a standard reference
+  - engine:
+      - type: sglang
+        model: Qwen/Qwen2.5-1.5B-Instruct
+        args: "--trust-remote-code --disable-radix-cache --tp 1"
+        env: {SGL_ENABLE_JIT_DEEPGEMM: "1"}
+    benchmarks:
+      - type: conversational_short
+        dataset-name: random
+        random-input-len: 100
+        random-output-len: 100
+        random-prefix-len: 0
+        num-prompts: 1000
+        request-rate: 10
+      - type: conversational_medium
+        dataset-name: random
+        random-input-len: 1000
+        random-output-len: 100
+        random-prefix-len: 2000
+        num-prompts: 500
+        request-rate: 5
+      - type: conversational_long
+        dataset-name: random
+        random-input-len: 5000
+        random-output-len: 100
+        random-prefix-len: 7000
+        num-prompts: 200
+        request-rate: 2
+      - type: summarization
+        dataset-name: random
+        random-input-len: 12000
+        random-output-len: 100
+        random-prefix-len: 0
+        num-prompts: 200
+        request-rate: 2
+      - type: write_essay
+        dataset-name: random
+        random-input-len: 100
+        random-output-len: 3000
+        random-prefix-len: 0
+        num-prompts: 200
+        request-rate: 2
+      - type: rewrite_essay
+        dataset-name: random
+        random-input-len: 12000
+        random-output-len: 3000
+        random-prefix-len: 0
+        num-prompts: 200
+        request-rate: 2
+
+    # Test as a standard reference
+  - engine:
+      - type: sglang
+        model: Qwen/Qwen2.5-1.5B-Instruct
+        args: "--trust-remote-code --load-format dummy --tp 1"
+        env: {SGL_ENABLE_JIT_DEEPGEMM: "1"}
+    benchmarks:
+      - type: conversational_short
+        dataset-name: random
+        random-input-len: 100
+        random-output-len: 100
+        random-prefix-len: 0
+        num-prompts: 1000
+        request-rate: 10
+      - type: conversational_medium
+        dataset-name: random
+        random-input-len: 1000
+        random-output-len: 100
+        random-prefix-len: 2000
+        num-prompts: 500
+        request-rate: 5
+      - type: conversational_long
+        dataset-name: random
+        random-input-len: 5000
+        random-output-len: 100
+        random-prefix-len: 7000
+        num-prompts: 200
+        request-rate: 2
+      - type: summarization
+        dataset-name: random
+        random-input-len: 12000
+        random-output-len: 100
+        random-prefix-len: 0
+        num-prompts: 200
+        request-rate: 2
+      - type: write_essay
+        dataset-name: random
+        random-input-len: 100
+        random-output-len: 3000
+        random-prefix-len: 0
+        num-prompts: 200
+        request-rate: 2
+      - type: rewrite_essay
+        dataset-name: random
+        random-input-len: 12000
+        random-output-len: 3000
+        random-prefix-len: 0
+        num-prompts: 200
+        request-rate: 2
+
+    # Test as a standard reference
+  - engine:
+      - type: sglang
+        model: Qwen/Qwen2.5-1.5B-Instruct
+        args: "--trust-remote-code --tp 1"
+        env: {SGL_ENABLE_JIT_DEEPGEMM: "1"}
+    benchmarks:
+      - type: conversational_short
+        dataset-name: random
+        random-input-len: 100
+        random-output-len: 100
+        random-prefix-len: 0
+        num-prompts: 1000
+        request-rate: 10
+      - type: conversational_medium
+        dataset-name: random
+        random-input-len: 1000
+        random-output-len: 100
+        random-prefix-len: 2000
+        num-prompts: 500
+        request-rate: 5
+      - type: conversational_long
+        dataset-name: random
+        random-input-len: 5000
+        random-output-len: 100
+        random-prefix-len: 7000
+        num-prompts: 200
+        request-rate: 2
+      - type: summarization
+        dataset-name: random
+        random-input-len: 12000
+        random-output-len: 100
+        random-prefix-len: 0
+        num-prompts: 200
+        request-rate: 2
+      - type: write_essay
+        dataset-name: random
+        random-input-len: 100
+        random-output-len: 3000
+        random-prefix-len: 0
+        num-prompts: 200
+        request-rate: 2
+      - type: rewrite_essay
+        dataset-name: random
+        random-input-len: 12000
+        random-output-len: 3000
+        random-prefix-len: 0
+        num-prompts: 200
+        request-rate: 2
+
+    # Test as a standard reference
+  - engine:
+      - type: sglang
+        model: Qwen/Qwen2.5-1.5B-Instruct
+        args: "--trust-remote-code --disable-radix-cache --load-format dummy --tp 1"
+        env: {}
+    benchmarks:
+      - type: conversational_short
+        dataset-name: random
+        random-input-len: 100
+        random-output-len: 100
+        random-prefix-len: 0
+        num-prompts: 1000
+        request-rate: 10
+      - type: conversational_medium
+        dataset-name: random
+        random-input-len: 1000
+        random-output-len: 100
+        random-prefix-len: 2000
+        num-prompts: 500
+        request-rate: 5
+      - type: conversational_long
+        dataset-name: random
+        random-input-len: 5000
+        random-output-len: 100
+        random-prefix-len: 7000
+        num-prompts: 200
+        request-rate: 2
+      - type: summarization
+        dataset-name: random
+        random-input-len: 12000
+        random-output-len: 100
+        random-prefix-len: 0
+        num-prompts: 200
+        request-rate: 2
+      - type: write_essay
+        dataset-name: random
+        random-input-len: 100
+        random-output-len: 3000
+        random-prefix-len: 0
+        num-prompts: 200
+        request-rate: 2
+      - type: rewrite_essay
+        dataset-name: random
+        random-input-len: 12000
+        random-output-len: 3000
+        random-prefix-len: 0
+        num-prompts: 200
+        request-rate: 2
+
+
+    # Test as a standard reference
+  - engine:
+      - type: sglang
+        model: Qwen/Qwen2.5-1.5B-Instruct
+        args: "--trust-remote-code --tp 1"
+        env: {}
+    benchmarks:
+      - type: conversational_short
+        dataset-name: random
+        random-input-len: 100
+        random-output-len: 100
+        random-prefix-len: 0
+        num-prompts: 1000
+        request-rate: 10
+      - type: conversational_medium
+        dataset-name: random
+        random-input-len: 1000
+        random-output-len: 100
+        random-prefix-len: 2000
+        num-prompts: 500
+        request-rate: 5
+      - type: conversational_long
+        dataset-name: random
+        random-input-len: 5000
+        random-output-len: 100
+        random-prefix-len: 7000
+        num-prompts: 200
+        request-rate: 2
+      - type: summarization
+        dataset-name: random
+        random-input-len: 12000
+        random-output-len: 100
+        random-prefix-len: 0
+        num-prompts: 200
+        request-rate: 2
+      - type: write_essay
+        dataset-name: random
+        random-input-len: 100
+        random-output-len: 3000
+        random-prefix-len: 0
+        num-prompts: 200
+        request-rate: 2
+      - type: rewrite_essay
+        dataset-name: random
+        random-input-len: 12000
+        random-output-len: 3000
+        random-prefix-len: 0
+        num-prompts: 200
+        request-rate: 2

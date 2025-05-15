@@ -1,0 +1,149 @@
+runs:
+  - engine:
+      - type: vllm
+        model: Qwen/Qwen3-235B-A22B
+        args: "--tensor-parallel-size 8 --trust-remote-code"
+        env: {}
+    benchmarks:  
+      - type: conversational_short
+        dataset-name: random
+        random-input-len: 100
+        random-output-len: 100
+        random-prefix-len: 0
+        num-prompts: 1000
+        request-rate: 10
+      - type: conversational_medium
+        dataset-name: random
+        random-input-len: 1000
+        random-output-len: 100
+        random-prefix-len: 2000
+        num-prompts: 500
+        request-rate: 5
+      - type: conversational_long
+        dataset-name: random
+        random-input-len: 5000
+        random-output-len: 100
+        random-prefix-len: 7000
+        num-prompts: 200
+        request-rate: 2
+      - type: summarization
+        dataset-name: random
+        random-input-len: 12000
+        random-output-len: 100
+        random-prefix-len: 0
+        num-prompts: 200
+        request-rate: 2
+      - type: write_essay
+        dataset-name: random
+        random-input-len: 100
+        random-output-len: 3000
+        random-prefix-len: 0
+        num-prompts: 200
+        request-rate: 2
+      - type: rewrite_essay
+        dataset-name: random
+        random-input-len: 12000
+        random-output-len: 3000
+        random-prefix-len: 0
+        num-prompts: 200
+        request-rate: 2
+
+  - engine:
+      - type: sglang
+        model: Qwen/Qwen3-235B-A22B
+        args: "--tp 8 --trust-remote-code"
+        env: {}
+    benchmarks:
+      - type: conversational_short
+        dataset-name: random
+        random-input-len: 100
+        random-output-len: 100
+        random-prefix-len: 0
+        num-prompts: 1000
+        request-rate: 10
+      - type: conversational_medium
+        dataset-name: random
+        random-input-len: 1000
+        random-output-len: 100
+        random-prefix-len: 2000
+        num-prompts: 500
+        request-rate: 5
+      - type: conversational_long
+        dataset-name: random
+        random-input-len: 5000
+        random-output-len: 100
+        random-prefix-len: 7000
+        num-prompts: 200
+        request-rate: 2
+      - type: summarization
+        dataset-name: random
+        random-input-len: 12000
+        random-output-len: 100
+        random-prefix-len: 0
+        num-prompts: 200
+        request-rate: 2
+      - type: write_essay
+        dataset-name: random
+        random-input-len: 100
+        random-output-len: 3000
+        random-prefix-len: 0
+        num-prompts: 200
+        request-rate: 2
+      - type: rewrite_essay
+        dataset-name: random
+        random-input-len: 12000
+        random-output-len: 3000
+        random-prefix-len: 0
+        num-prompts: 200
+        request-rate: 2
+
+  # Configuration with --disable-overlap-schedule
+  - engine:
+      - type: sglang
+        model: Qwen/Qwen3-235B-A22B
+        args: "--tp 8 --trust-remote-code --disable-overlap-schedule"
+        env: {}
+    benchmarks:
+      - type: conversational_short
+        dataset-name: random
+        random-input-len: 100
+        random-output-len: 100
+        random-prefix-len: 0
+        num-prompts: 1000
+        request-rate: 10
+      - type: conversational_medium
+        dataset-name: random
+        random-input-len: 1000
+        random-output-len: 100
+        random-prefix-len: 2000
+        num-prompts: 500
+        request-rate: 5
+      - type: conversational_long
+        dataset-name: random
+        random-input-len: 5000
+        random-output-len: 100
+        random-prefix-len: 7000
+        num-prompts: 200
+        request-rate: 2
+      - type: summarization
+        dataset-name: random
+        random-input-len: 12000
+        random-output-len: 100
+        random-prefix-len: 0
+        num-prompts: 200
+        request-rate: 2
+      - type: write_essay
+        dataset-name: random
+        random-input-len: 100
+        random-output-len: 3000
+        random-prefix-len: 0
+        num-prompts: 200
+        request-rate: 2
+      - type: rewrite_essay
+        dataset-name: random
+        random-input-len: 12000
+        random-output-len: 3000
+        random-prefix-len: 0
+        num-prompts: 200
+        request-rate: 2
+  
