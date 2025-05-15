@@ -1,4 +1,4 @@
-| [Docs](https://docs.iearena.org) | [Leaderboard](https://iearena.org) | [Email](iearena.ai@gmail.com) |
+| [Docs](https://docs.iearena.org) | [Leaderboard](https://iearena.org) | [Email](iearena.ai@gmail.com) | [Slack](https://join.slack.com/t/inferenceenginearena/shared_invite/zt-35s1xajv4-qLGkOYD5umoiTIyw_Vsf1w) | [Video Tutorial](https://www.youtube.com/watch?v=mgTDzsfoT1s)
 # Inference Engine Arena
 
 TL;DR - Postman & Chatbot Arena for inference benchmarking. 
