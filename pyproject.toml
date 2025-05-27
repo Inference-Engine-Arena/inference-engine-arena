@@ -39,8 +39,11 @@ Repository = "https://github.com/Inference-Engine-Arena/inference-engine-arena.g
 Documentation = "https://github.com/Inference-Engine-Arena/inference-engine-arena/docs"
 
 [tool.setuptools]
-packages = {find = {where = ["."]}}  # Automatically find all packages
+packages = ["iearena"]
 include-package-data = true
+
+[tool.setuptools.package-dir]
+"iearena" = "src"
 
 [tool.setuptools.dynamic]
 dependencies = {file = ["requirements.txt"]}

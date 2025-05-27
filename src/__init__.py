@@ -1,3 +1,8 @@
 """
-Inference Engine Arena - A framework for comparing performance of different LLM inference engines.
+iearena - Inference Engine Arena
+
 """
+
+from .wrappers import Fireworks
+
+__all__ = ['Fireworks']

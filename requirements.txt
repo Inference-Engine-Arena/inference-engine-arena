@@ -30,3 +30,6 @@ datasets
 pandas
 Pillow
 vllm
+
+# MaaS API providers
+fireworks-ai
