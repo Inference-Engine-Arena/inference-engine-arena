@@ -1,0 +1,116 @@
+{
+  "id": "run-20250507-213430-b13cac1d",
+  "start_time": "2025-05-07T21:34:30.593712",
+  "engines": [
+    "sglang",
+    "vllm"
+  ],
+  "benchmark_types": [
+    "write_essay"
+  ],
+  "gpu_info": {
+    "success": true,
+    "num_gpus": 8,
+    "gpus": [
+      {
+        "index": 0,
+        "name": "NVIDIA H100 80GB HBM3",
+        "memory_total": 81559.0,
+        "memory_used": 1.0,
+        "utilization": 0.0
+      },
+      {
+        "index": 1,
+        "name": "NVIDIA H100 80GB HBM3",
+        "memory_total": 81559.0,
+        "memory_used": 1.0,
+        "utilization": 0.0
+      },
+      {
+        "index": 2,
+        "name": "NVIDIA H100 80GB HBM3",
+        "memory_total": 81559.0,
+        "memory_used": 1.0,
+        "utilization": 0.0
+      },
+      {
+        "index": 3,
+        "name": "NVIDIA H100 80GB HBM3",
+        "memory_total": 81559.0,
+        "memory_used": 1.0,
+        "utilization": 0.0
+      },
+      {
+        "index": 4,
+        "name": "NVIDIA H100 80GB HBM3",
+        "memory_total": 81559.0,
+        "memory_used": 1.0,
+        "utilization": 0.0
+      },
+      {
+        "index": 5,
+        "name": "NVIDIA H100 80GB HBM3",
+        "memory_total": 81559.0,
+        "memory_used": 1.0,
+        "utilization": 0.0
+      },
+      {
+        "index": 6,
+        "name": "NVIDIA H100 80GB HBM3",
+        "memory_total": 81559.0,
+        "memory_used": 1.0,
+        "utilization": 0.0
+      },
+      {
+        "index": 7,
+        "name": "NVIDIA H100 80GB HBM3",
+        "memory_total": 81559.0,
+        "memory_used": 1.0,
+        "utilization": 0.0
+      }
+    ]
+  },
+  "sub_runs": [
+    "sub-run-20250507-213838-vllm-Llama-3-3-70B-Instruct-write-essay-f938fc48",
+    "sub-run-20250507-215031-vllm-Llama-3-3-70B-Instruct-write-essay-1c047e82",
+    "sub-run-20250507-215738-vllm-Llama-3-3-70B-Instruct-write-essay-a09c1af3",
+    "sub-run-20250507-220315-vllm-Llama-3-3-70B-Instruct-write-essay-fdca534b",
+    "sub-run-20250507-220811-vllm-Llama-3-3-70B-Instruct-write-essay-65e0699b",
+    "sub-run-20250507-221246-vllm-Llama-3-3-70B-Instruct-write-essay-1f3915cb",
+    "sub-run-20250507-221708-vllm-Llama-3-3-70B-Instruct-write-essay-69f55e6d",
+    "sub-run-20250507-222123-vllm-Llama-3-3-70B-Instruct-write-essay-c6ec72a7",
+    "sub-run-20250507-222545-vllm-Llama-3-3-70B-Instruct-write-essay-70f20018",
+    "sub-run-20250507-223017-vllm-Llama-3-3-70B-Instruct-write-essay-2f4a6aa7",
+    "sub-run-20250507-223302-vllm-Llama-3-3-70B-Instruct-write-essay-c84f9cd2",
+    "sub-run-20250507-223625-vllm-Llama-3-3-70B-Instruct-write-essay-74199498",
+    "sub-run-20250507-224021-vllm-Llama-3-3-70B-Instruct-write-essay-a6eb5759",
+    "sub-run-20250507-224448-vllm-Llama-3-3-70B-Instruct-write-essay-58d6bec5",
+    "sub-run-20250507-224954-vllm-Llama-3-3-70B-Instruct-write-essay-d2513796",
+    "sub-run-20250507-225217-vllm-Llama-3-3-70B-Instruct-write-essay-948a434c",
+    "sub-run-20250507-225503-vllm-Llama-3-3-70B-Instruct-write-essay-741decfc",
+    "sub-run-20250507-225806-vllm-Llama-3-3-70B-Instruct-write-essay-c0e1984f",
+    "sub-run-20250507-230131-vllm-Llama-3-3-70B-Instruct-write-essay-1d91e350",
+    "sub-run-20250507-230623-sglang-Llama-3-3-70B-Instruct-write-essay-e1975f0d",
+    "sub-run-20250507-231809-sglang-Llama-3-3-70B-Instruct-write-essay-5465ff5c",
+    "sub-run-20250507-232508-sglang-Llama-3-3-70B-Instruct-write-essay-93d9155b",
+    "sub-run-20250507-233037-sglang-Llama-3-3-70B-Instruct-write-essay-92a10a60",
+    "sub-run-20250507-233535-sglang-Llama-3-3-70B-Instruct-write-essay-c5796c30",
+    "sub-run-20250507-234018-sglang-Llama-3-3-70B-Instruct-write-essay-fb795c0c",
+    "sub-run-20250507-234449-sglang-Llama-3-3-70B-Instruct-write-essay-1be1b5d1",
+    "sub-run-20250507-234929-sglang-Llama-3-3-70B-Instruct-write-essay-c8ca621d",
+    "sub-run-20250507-235402-sglang-Llama-3-3-70B-Instruct-write-essay-6758d259",
+    "sub-run-20250507-235837-sglang-Llama-3-3-70B-Instruct-write-essay-ea999abe",
+    "sub-run-20250508-000114-sglang-Llama-3-3-70B-Instruct-write-essay-11636a65",
+    "sub-run-20250508-000429-sglang-Llama-3-3-70B-Instruct-write-essay-93624cfd",
+    "sub-run-20250508-000818-sglang-Llama-3-3-70B-Instruct-write-essay-f41f10c4",
+    "sub-run-20250508-001238-sglang-Llama-3-3-70B-Instruct-write-essay-5f0d965d",
+    "sub-run-20250508-001736-sglang-Llama-3-3-70B-Instruct-write-essay-ee0658cb",
+    "sub-run-20250508-001953-sglang-Llama-3-3-70B-Instruct-write-essay-a810cc8b",
+    "sub-run-20250508-002231-sglang-Llama-3-3-70B-Instruct-write-essay-6c411ed0",
+    "sub-run-20250508-002529-sglang-Llama-3-3-70B-Instruct-write-essay-023d2196",
+    "sub-run-20250508-002903-sglang-Llama-3-3-70B-Instruct-write-essay-9d63548f"
+  ],
+  "success": true,
+  "end_time": "2025-05-08T00:33:01.500731",
+  "duration_seconds": 10710.907019
+}

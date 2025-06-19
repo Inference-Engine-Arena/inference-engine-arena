@@ -1,0 +1,84 @@
+{
+  "id": "run-20250508-225607-65868d84",
+  "start_time": "2025-05-08T22:56:07.614808",
+  "engines": [
+    "vllm",
+    "sglang"
+  ],
+  "benchmark_types": [
+    "write_essay"
+  ],
+  "gpu_info": {
+    "success": true,
+    "num_gpus": 8,
+    "gpus": [
+      {
+        "index": 0,
+        "name": "NVIDIA H100 80GB HBM3",
+        "memory_total": 81559.0,
+        "memory_used": 1.0,
+        "utilization": 0.0
+      },
+      {
+        "index": 1,
+        "name": "NVIDIA H100 80GB HBM3",
+        "memory_total": 81559.0,
+        "memory_used": 1.0,
+        "utilization": 0.0
+      },
+      {
+        "index": 2,
+        "name": "NVIDIA H100 80GB HBM3",
+        "memory_total": 81559.0,
+        "memory_used": 1.0,
+        "utilization": 0.0
+      },
+      {
+        "index": 3,
+        "name": "NVIDIA H100 80GB HBM3",
+        "memory_total": 81559.0,
+        "memory_used": 1.0,
+        "utilization": 0.0
+      },
+      {
+        "index": 4,
+        "name": "NVIDIA H100 80GB HBM3",
+        "memory_total": 81559.0,
+        "memory_used": 1.0,
+        "utilization": 0.0
+      },
+      {
+        "index": 5,
+        "name": "NVIDIA H100 80GB HBM3",
+        "memory_total": 81559.0,
+        "memory_used": 1.0,
+        "utilization": 0.0
+      },
+      {
+        "index": 6,
+        "name": "NVIDIA H100 80GB HBM3",
+        "memory_total": 81559.0,
+        "memory_used": 1.0,
+        "utilization": 0.0
+      },
+      {
+        "index": 7,
+        "name": "NVIDIA H100 80GB HBM3",
+        "memory_total": 81559.0,
+        "memory_used": 1.0,
+        "utilization": 0.0
+      }
+    ]
+  },
+  "sub_runs": [
+    "sub-run-20250508-230013-vllm-Llama-3-3-70B-Instruct-write-essay-8df42165",
+    "sub-run-20250508-230824-vllm-Llama-3-3-70B-Instruct-write-essay-9f3855cf",
+    "sub-run-20250508-231712-vllm-Llama-3-3-70B-Instruct-write-essay-a7c4f030",
+    "sub-run-20250508-232715-sglang-Llama-3-3-70B-Instruct-write-essay-d5f5a116",
+    "sub-run-20250508-233514-sglang-Llama-3-3-70B-Instruct-write-essay-02b080bd",
+    "sub-run-20250508-234355-sglang-Llama-3-3-70B-Instruct-write-essay-426096f0"
+  ],
+  "success": true,
+  "end_time": "2025-05-08T23:52:53.562711",
+  "duration_seconds": 3405.947903
+}
